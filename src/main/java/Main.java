@@ -5,32 +5,24 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
-import edu.wpi.cscore.MjpegServer;
-import edu.wpi.cscore.VideoMode;
+import edu.flash3388.GrayscalePipeline;
 import edu.wpi.cscore.VideoSource;
+import edu.wpi.first.CameraConfig;
+import edu.wpi.first.Config;
+import edu.wpi.first.ConfigLoadException;
+import edu.wpi.first.ConfigLoader;
+import edu.wpi.first.NtMode;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.vision.VisionPipeline;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionThread;
-
-import org.opencv.core.Mat;
-import org.opencv.core.Core;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 /*
    JSON format:
    {
@@ -60,195 +52,74 @@ import org.opencv.imgproc.Imgproc;
 
 public final class Main {
 
-    private static String configFile = "/boot/frc.json";
+    private static final String DEFAULT_CONFIG_FILE_PATH = "/boot/frc.json";
 
-    @SuppressWarnings("MemberName")
-    public static class CameraConfig {
-
-        public String name;
-        public String path;
-        public JsonObject config;
-    }
-
-    public static int team;
-    public static boolean server;
-    public static List<CameraConfig> cameraConfigs = new ArrayList<>();
-
-    private Main() {
-    }
-
-    /**
-     * Report parse error.
-     */
-    public static void parseError(String str) {
-        System.err.println("config error in '" + configFile + "': " + str);
-    }
-
-    /**
-     * Read single camera configuration.
-     */
-    public static boolean readCameraConfig(JsonObject config) {
-        CameraConfig cam = new CameraConfig();
-
-        // name
-        JsonElement nameElement = config.get("name");
-        if (nameElement == null) {
-            parseError("could not read camera name");
-            return false;
+    public static void main(String... args) {
+        String configFilePath = DEFAULT_CONFIG_FILE_PATH;
+        if (args.length > 0) {
+            configFilePath = args[0];
         }
-        cam.name = nameElement.getAsString();
 
-        // path
-        JsonElement pathElement = config.get("path");
-        if (pathElement == null) {
-            parseError("camera '" + cam.name + "': could not read path");
-            return false;
-        }
-        cam.path = pathElement.getAsString();
-
-        cam.config = config;
-
-        cameraConfigs.add(cam);
-        return true;
-    }
-
-    /**
-     * Read configuration file.
-     */
-    @SuppressWarnings("PMD.CyclomaticComplexity")
-    public static boolean readConfig() {
-        // parse file
-        JsonElement top;
         try {
-            top = new JsonParser().parse(Files.newBufferedReader(Paths.get(configFile)));
-        } catch (IOException ex) {
-            System.err.println("could not open '" + configFile + "': " + ex);
-            return false;
-        }
+            Config config = new ConfigLoader(new File(configFilePath)).load();
 
-        // top level must be an object
-        if (!top.isJsonObject()) {
-            parseError("must be JSON object");
-            return false;
-        }
-        JsonObject obj = top.getAsJsonObject();
+            startNetworkTables(config);
 
-        // team number
-        JsonElement teamElement = obj.get("team");
-        if (teamElement == null) {
-            parseError("could not read team number");
-            return false;
-        }
-        team = teamElement.getAsInt();
-
-        // ntmode (optional)
-        if (obj.has("ntmode")) {
-            String str = obj.get("ntmode").getAsString();
-            if ("client".equalsIgnoreCase(str)) {
-                server = false;
-            } else if ("server".equalsIgnoreCase(str)) {
-                server = true;
-            } else {
-                parseError("could not understand ntmode value '" + str + "'");
+            List<VideoSource> cameras = startCameras(config);
+            if (cameras.size() >= 1) {
+                startVisionThread(cameras);
             }
-        }
 
-        // cameras
-        JsonElement camerasElement = obj.get("cameras");
-        if (camerasElement == null) {
-            parseError("could not read cameras");
-            return false;
+            waitForever();
+        } catch (ConfigLoadException e) {
+            e.printStackTrace();
         }
-        JsonArray cameras = camerasElement.getAsJsonArray();
-        for (JsonElement camera : cameras) {
-            if (!readCameraConfig(camera.getAsJsonObject())) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
-    /**
-     * Start running the camera.
-     */
-    public static VideoSource startCamera(CameraConfig config) {
-        System.out.println("Starting camera '" + config.name + "' on " + config.path);
-        VideoSource camera = CameraServer.getInstance().startAutomaticCapture(
-                config.name, config.path);
+    private static void startNetworkTables(Config config) {
+        NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
+        if (config.getNtMode() == NtMode.SERVER) {
+            System.out.println("Setting up NetworkTables server");
+            ntinst.startServer();
+        } else {
+            System.out.println("Setting up NetworkTables client for team " + config.getTeamNumber());
+            ntinst.startClientTeam(config.getTeamNumber());
+        }
+    }
+
+    private static List<VideoSource> startCameras(Config config) {
+        List<VideoSource> cameras = new ArrayList<>();
+        for (CameraConfig cameraConfig : config.getCameraConfigs()) {
+            cameras.add(startCamera(cameraConfig));
+        }
+
+        return cameras;
+    }
+
+    private static VideoSource startCamera(CameraConfig config) {
+        System.out.println(String.format("Starting camera %s on %s", config.getName(), config.getPath()));
+
+        VideoSource camera = CameraServer.getInstance().startAutomaticCapture(config.getName(), config.getPath());
 
         Gson gson = new GsonBuilder().create();
-
-        camera.setConfigJson(gson.toJson(config.config));
+        camera.setConfigJson(gson.toJson(config.getJsonData()));
 
         return camera;
     }
 
-    /**
-     * Example pipeline.
-     */
-    public static class MyPipeline implements VisionPipeline {
+    private static void startVisionThread(List<VideoSource> cameras) {
+        CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
 
-        private final CvSource mSource;
+        VisionThread visionThread = new VisionThread(
+                cameras.get(0),
+                new GrayscalePipeline(cvSource),
+                pipeline -> {
+                });
 
-        public MyPipeline(CvSource source) {
-            mSource = source;
-        }
-
-        @Override
-        public void process(Mat mat) {
-            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
-            mSource.putFrame(mat);
-        }
+        visionThread.start();
     }
 
-    /**
-     * Main.
-     */
-    public static void main(String... args) {
-        if (args.length > 0) {
-            configFile = args[0];
-        }
-
-        // read configuration
-        if (!readConfig()) {
-            return;
-        }
-
-        // start NetworkTables
-        NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
-        if (server) {
-            System.out.println("Setting up NetworkTables server");
-            ntinst.startServer();
-        } else {
-            System.out.println("Setting up NetworkTables client for team " + team);
-            ntinst.startClientTeam(team);
-        }
-
-        // start cameras
-        List<VideoSource> cameras = new ArrayList<>();
-        for (CameraConfig cameraConfig : cameraConfigs) {
-            cameras.add(startCamera(cameraConfig));
-        }
-
-        // start image processing on camcameraConfigsera 0 if present
-        if (cameras.size() >= 1) {
-            CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
-
-            VisionThread visionThread = new VisionThread(cameras.get(0),
-                    new MyPipeline(cvSource), pipeline -> {
-                // do something with pipeline results
-            });
-      /* something like this for GRIP:
-      VisionThread visionThread = new VisionThread(cameras.get(0),
-              new GripPipeline(), pipeline -> {
-        ...
-      });
-       */
-            visionThread.start();
-        }
-
-        // loop forever
+    private static void waitForever() {
         for (; ; ) {
             try {
                 Thread.sleep(10000);
