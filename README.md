@@ -19,6 +19,32 @@ The configuration is defined in `/boot/frc.json` by default, and contains the fo
 - status of the network tables instance used (for communicating with the robot - server or client)
 - settings for cameras to display in the camera server
 
+```JSON
+{
+	"team": <team number>,
+	"ntmode": <"client" or "server", "client" if unspecified>
+	"cameras": [
+	   {
+	       "name": <camera name>
+	       "path": <path, e.g. "/dev/video0">
+	       "pixel format": <"MJPEG", "YUYV", etc>   // optional
+	       "width": <video mode width>              // optional
+	       "height": <video mode height>            // optional
+	       "fps": <video mode fps>                  // optional
+	       "brightness": <percentage brightness>    // optional
+	       "white balance": <"auto", "hold", value> // optional
+	       "exposure": <"auto", "hold", value>      // optional
+	       "properties": [                          // optional
+	           {
+	               "name": <property name>
+	               "value": <property value>
+	           }
+	       ]
+	   }
+	]
+}
+```
+
 # Building
 
 To build the code run the gradle wrapper: `./gradlew build` for UNIX systems and `gradlew.bat build` for Windows systems.
