@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '4.0.3' apply false
+}
+
+mainClassName = 'Main'
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+repositories {
+    mavenCentral()
+
+    maven {
+        url('http://first.wpi.edu/FRC/roborio/maven/release')
+    }
+}
+
+dependencies {
+    compile 'com.google.code.gson:gson:2.8.5'
+
+    compile 'edu.wpi.first.wpilibj:wpilibj-java:2019.1.1'
+    compile 'edu.wpi.first.wpiutil:wpiutil-java:2019.2.1'
+    compile 'edu.wpi.first.cscore:cscore-java:2019.2.1'
+    compile 'edu.wpi.first.ntcore:ntcore-java:2019.2.1'
+    compile 'edu.wpi.first.cameraserver:cameraserver-java:2019.2.1'
+    compile 'edu.wpi.first.thirdparty.frc2019.opencv:opencv-java:3.4.4-4'
+}
+
+wrapper {
+    gradleVersion = '5.0'
+}
