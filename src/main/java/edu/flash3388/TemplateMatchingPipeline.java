@@ -1,5 +1,6 @@
 package edu.flash3388;
 
+import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
 import edu.flash3388.vision.template.ScaledTemplateMatchingResult;
 import edu.flash3388.vision.template.TemplateMatcher;
@@ -21,12 +22,14 @@ public class TemplateMatchingPipeline implements VisionPipeline {
     private final double mInitialScaleFactor;
     private final CvSource mResultOutput;
     private final CvProcessing mCvProcessing;
+    private final ImageAnalyser mImageAnalyser;
 
-    public TemplateMatchingPipeline(TemplateMatcher templateMatcher, double initialScaleFactor, CvSource resultOutput, CvProcessing cvProcessing) {
+    public TemplateMatchingPipeline(TemplateMatcher templateMatcher, double initialScaleFactor, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser) {
         mTemplateMatcher = templateMatcher;
         mInitialScaleFactor = initialScaleFactor;
         mResultOutput = resultOutput;
         mCvProcessing = cvProcessing;
+        mImageAnalyser = imageAnalyser;
     }
 
 

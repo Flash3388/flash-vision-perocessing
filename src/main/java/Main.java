@@ -119,7 +119,7 @@ public final class Main {
 
         VisionThread visionThread = new VisionThread(
                 cameras.get(0),
-                new TemplateMatchingPipeline(templateMatcher, config.getTemplateMatchingScaleFactor(), cvSource, cvProcessing),
+                new TemplateMatchingPipeline(templateMatcher, config.getTemplateMatchingScaleFactor(), cvSource, cvProcessing, imageAnalyser),
                 pipeline -> {
                 });
 
