@@ -143,14 +143,14 @@ public class ConfigLoader {
 
     private File parseVisionTemplate(JsonObject rootObject) throws ConfigLoadException {
         try {
-            if (!rootObject.has("visionTemplate")) {
-                throw new ConfigLoadException("missing `visionTemplate`");
+            if (!rootObject.has("visionTemplatePath")) {
+                throw new ConfigLoadException("missing `visionTemplatePath`");
             }
 
-            String strVal = rootObject.get("visionTemplate").getAsString();
+            String strVal = rootObject.get("visionTemplatePath").getAsString();
             return new File(strVal);
         } catch (ClassCastException e) {
-            throw new ConfigLoadException("`visionTemplate` element is not a string");
+            throw new ConfigLoadException("`visionTemplatePath` element is not a string");
         }
     }
 

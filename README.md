@@ -41,7 +41,10 @@ The configuration is defined in `/boot/frc.json` by default, and contains the fo
 	           }
 	       ]
 	   }
-	]
+	],
+	"templateMatchingMethod": <value from the TemplateMatchingMethod enum, for example "SQDIFF_NORMED">,
+	"visionTemplatePath": <full path to the template image>,
+	"templateMatchingScaleFactor": <scale factor between the original image and the template, for example 2.0>
 }
 ```
 
