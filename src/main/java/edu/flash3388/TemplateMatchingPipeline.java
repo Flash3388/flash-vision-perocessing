@@ -8,13 +8,10 @@ import edu.flash3388.vision.template.TemplateMatchingException;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Range;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
-
-import java.util.List;
 
 public class TemplateMatchingPipeline implements VisionPipeline {
 
@@ -61,8 +58,6 @@ public class TemplateMatchingPipeline implements VisionPipeline {
              * Filter the image by color range
              */
             mCvProcessing.filterMatColors(hsvImage, hsvImage, hue, saturation, value);
-
-            List<MatOfPoint> contours = mCvProcessing.detectContours(hsvImage);
 
             /*
              * matchWithScaling will attempt to match the template (or templates) with the image, returning the best match (score wise).
