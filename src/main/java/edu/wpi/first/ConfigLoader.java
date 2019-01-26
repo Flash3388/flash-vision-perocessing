@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import edu.flash3388.vision.template.TemplateMatchingMethod;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,7 +12,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class ConfigLoader {
 
@@ -45,8 +45,11 @@ public class ConfigLoader {
         int teamNumber = parseTeamNumber(rootObject);
         NtMode ntMode = parseNtMode(rootObject);
         List<CameraConfig> cameraConfigs = parseCameraConfigs(rootObject);
+        TemplateMatchingMethod templateMatchingMethod = parseTemplateMatchingMethod(rootObject);
+        File visionTemplate = parseVisionTemplate(rootObject);
+        double templateMatchingScaleFactor = parseTemplateMatchingScaleFactor(rootObject);
 
-        return new Config(teamNumber, ntMode, cameraConfigs);
+        return new Config(teamNumber, ntMode, cameraConfigs, templateMatchingMethod, visionTemplate, templateMatchingScaleFactor);
     }
 
     private int parseTeamNumber(JsonObject rootObject) throws ConfigLoadException {
@@ -122,6 +125,44 @@ public class ConfigLoader {
             return new CameraConfig(name, path, cameraRoot);
         } catch (ClassCastException | IllegalStateException e) {
             throw new ConfigLoadException("camera config element is not of wanted type", e);
+        }
+    }
+
+    private TemplateMatchingMethod parseTemplateMatchingMethod(JsonObject rootObject) throws ConfigLoadException {
+        try {
+            if (!rootObject.has("templateMatchingMethod")) {
+                throw new ConfigLoadException("missing `templateMatchingMethod`");
+            }
+
+            String strVal = rootObject.get("templateMatchingMethod").getAsString();
+            return TemplateMatchingMethod.valueOf(strVal);
+        } catch (ClassCastException e) {
+            throw new ConfigLoadException("`templateMatchingMethod` element is not a string");
+        }
+    }
+
+    private File parseVisionTemplate(JsonObject rootObject) throws ConfigLoadException {
+        try {
+            if (!rootObject.has("visionTemplate")) {
+                throw new ConfigLoadException("missing `visionTemplate`");
+            }
+
+            String strVal = rootObject.get("visionTemplate").getAsString();
+            return new File(strVal);
+        } catch (ClassCastException e) {
+            throw new ConfigLoadException("`visionTemplate` element is not a string");
+        }
+    }
+
+    private double parseTemplateMatchingScaleFactor(JsonObject rootObject) throws ConfigLoadException {
+        try {
+            if (!rootObject.has("templateMatchingScaleFactor")) {
+                throw new ConfigLoadException("missing `templateMatchingScaleFactor`");
+            }
+
+            return rootObject.get("templateMatchingScaleFactor").getAsDouble();
+        } catch (ClassCastException e) {
+            throw new ConfigLoadException("`templateMatchingScaleFactor` element is not a double");
         }
     }
 }

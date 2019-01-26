@@ -5,14 +5,13 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import edu.flash3388.GrayscalePipeline;
+import edu.flash3388.TemplateMatchingPipeline;
+import edu.flash3388.vision.cv.CvProcessing;
+import edu.flash3388.vision.template.SingleTemplateMatcher;
+import edu.flash3388.vision.template.TemplateMatcher;
+import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.CameraConfig;
 import edu.wpi.first.Config;
@@ -21,8 +20,13 @@ import edu.wpi.first.ConfigLoader;
 import edu.wpi.first.NtMode;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionThread;
+import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 /*
    JSON format:
    {
@@ -67,7 +71,7 @@ public final class Main {
 
             List<VideoSource> cameras = startCameras(config);
             if (cameras.size() >= 1) {
-                startVisionThread(cameras);
+                startVisionThread(cameras, config);
             }
 
             waitForever();
@@ -107,12 +111,15 @@ public final class Main {
         return camera;
     }
 
-    private static void startVisionThread(List<VideoSource> cameras) {
+    private static void startVisionThread(List<VideoSource> cameras, Config config) {
+        Mat template = Imgcodecs.imread(config.getVisionTemplate().getAbsolutePath());
+
+        TemplateMatcher templateMatcher = new SingleTemplateMatcher(template, config.getTemplateMatchingMethod(), new CvProcessing());
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
 
         VisionThread visionThread = new VisionThread(
                 cameras.get(0),
-                new GrayscalePipeline(cvSource),
+                new TemplateMatchingPipeline(templateMatcher, config.getTemplateMatchingScaleFactor(), cvSource),
                 pipeline -> {
                 });
 
