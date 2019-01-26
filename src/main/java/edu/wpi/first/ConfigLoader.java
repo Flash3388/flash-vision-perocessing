@@ -118,11 +118,15 @@ public class ConfigLoader {
             if (!cameraRoot.has("path")) {
                 throw new ConfigLoadException("camera element missing `path`");
             }
+            if (!cameraRoot.has("fov")) {
+                throw new ConfigLoadException("camera element missing `fov`");
+            }
 
             String name = cameraRoot.get("name").getAsString();
             String path = cameraRoot.get("path").getAsString();
+            double fov = cameraRoot.get("fov").getAsDouble();
 
-            return new CameraConfig(name, path, cameraRoot);
+            return new CameraConfig(name, path, cameraRoot, fov);
         } catch (ClassCastException | IllegalStateException e) {
             throw new ConfigLoadException("camera config element is not of wanted type", e);
         }

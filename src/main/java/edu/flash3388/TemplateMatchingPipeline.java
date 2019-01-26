@@ -8,10 +8,13 @@ import edu.flash3388.vision.template.TemplateMatchingException;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Range;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+
+import java.util.List;
 
 public class TemplateMatchingPipeline implements VisionPipeline {
 
@@ -23,13 +26,15 @@ public class TemplateMatchingPipeline implements VisionPipeline {
     private final CvSource mResultOutput;
     private final CvProcessing mCvProcessing;
     private final ImageAnalyser mImageAnalyser;
+    private final double mCamFieldOfViewRadians;
 
-    public TemplateMatchingPipeline(TemplateMatcher templateMatcher, double initialScaleFactor, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser) {
+    public TemplateMatchingPipeline(TemplateMatcher templateMatcher, double initialScaleFactor, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser, double camFieldOfViewRadians) {
         mTemplateMatcher = templateMatcher;
         mInitialScaleFactor = initialScaleFactor;
         mResultOutput = resultOutput;
         mCvProcessing = cvProcessing;
         mImageAnalyser = imageAnalyser;
+        mCamFieldOfViewRadians = camFieldOfViewRadians;
     }
 
 
@@ -57,6 +62,8 @@ public class TemplateMatchingPipeline implements VisionPipeline {
              */
             mCvProcessing.filterMatColors(hsvImage, hsvImage, hue, saturation, value);
 
+            List<MatOfPoint> contours = mCvProcessing.detectContours(hsvImage);
+
             /*
              * matchWithScaling will attempt to match the template (or templates) with the image, returning the best match (score wise).
              * The image will be scaled to match the template, by the scale factor given, until they are the same size.
@@ -73,6 +80,11 @@ public class TemplateMatchingPipeline implements VisionPipeline {
              * - matching score, which indicates what score was received for this match (highest match out of all matches.
              */
 
+            // this is the width of the template used in real life in CM
+            double realObjectWidthCm = 15.0;
+            double distanceToTargetCm = mImageAnalyser.measureDistance(image.width(), image.width(), realObjectWidthCm, mCamFieldOfViewRadians);
+
+            double degressToTarget = mImageAnalyser.calculateHorizontalOffsetDegrees(image, result.getCenterPoint(), Math.toDegrees(mCamFieldOfViewRadians));
         } catch (TemplateMatchingException e) {
             // change this however you want
             e.printStackTrace();
