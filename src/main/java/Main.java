@@ -15,7 +15,6 @@ import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.CameraConfig;
 import edu.wpi.first.Config;
-import edu.wpi.first.ConfigLoadException;
 import edu.wpi.first.ConfigLoader;
 import edu.wpi.first.NtMode;
 import edu.wpi.first.cameraserver.CameraServer;
@@ -75,7 +74,7 @@ public final class Main {
             }
 
             waitForever();
-        } catch (ConfigLoadException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
     }
