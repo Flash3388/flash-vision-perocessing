@@ -14,6 +14,10 @@ import java.util.List;
 
 public class CvProcessing {
 
+    public void rgbToHsv(Mat source, Mat destination) {
+        Imgproc.cvtColor(source, destination, Imgproc.COLOR_RGB2HSV);
+    }
+
     /**
      * Filters mat data by colors. Data within the color boundary now represents a contour.
      *

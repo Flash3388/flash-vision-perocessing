@@ -1,5 +1,6 @@
 package edu.flash3388;
 
+import edu.flash3388.vision.cv.CvProcessing;
 import edu.flash3388.vision.template.ScaledTemplateMatchingResult;
 import edu.flash3388.vision.template.TemplateMatcher;
 import edu.flash3388.vision.template.TemplateMatchingException;
@@ -7,6 +8,7 @@ import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Range;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -18,22 +20,45 @@ public class TemplateMatchingPipeline implements VisionPipeline {
     private final TemplateMatcher mTemplateMatcher;
     private final double mInitialScaleFactor;
     private final CvSource mResultOutput;
+    private final CvProcessing mCvProcessing;
 
-    public TemplateMatchingPipeline(TemplateMatcher templateMatcher, double initialScaleFactor, CvSource resultOutput) {
+    public TemplateMatchingPipeline(TemplateMatcher templateMatcher, double initialScaleFactor, CvSource resultOutput, CvProcessing cvProcessing) {
         mTemplateMatcher = templateMatcher;
         mInitialScaleFactor = initialScaleFactor;
         mResultOutput = resultOutput;
+        mCvProcessing = cvProcessing;
     }
 
 
     @Override
     public void process(Mat image) {
         try {
+            // will use this to perform vision processing, so that the original image remains intact to draw info on it
+            Mat hsvImage = new Mat();
+
+            /*
+             * Convert the image to HSV color scheme
+             */
+            mCvProcessing.rgbToHsv(image, hsvImage);
+
+
+            /*
+             * These values represent the color filtering range. You may edit them through network tables.
+             */
+            Range hue = new Range(0, 180);
+            Range saturation = new Range(0, 255);
+            Range value = new Range(0, 255);
+
+            /*
+             * Filter the image by color range
+             */
+            mCvProcessing.filterMatColors(hsvImage, hsvImage, hue, saturation, value);
+
             /*
              * matchWithScaling will attempt to match the template (or templates) with the image, returning the best match (score wise).
              * The image will be scaled to match the template, by the scale factor given, until they are the same size.
              */
-            ScaledTemplateMatchingResult result = mTemplateMatcher.matchWithScaling(image, mInitialScaleFactor);
+            ScaledTemplateMatchingResult result = mTemplateMatcher.matchWithScaling(hsvImage, mInitialScaleFactor);
             drawResult(image, result);
 
 

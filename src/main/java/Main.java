@@ -112,13 +112,14 @@ public final class Main {
 
     private static void startVisionThread(List<VideoSource> cameras, Config config) {
         Mat template = Imgcodecs.imread(config.getVisionTemplate().getAbsolutePath());
+        CvProcessing cvProcessing = new CvProcessing();
 
-        TemplateMatcher templateMatcher = new SingleTemplateMatcher(template, config.getTemplateMatchingMethod(), new CvProcessing());
+        TemplateMatcher templateMatcher = new SingleTemplateMatcher(template, config.getTemplateMatchingMethod(), cvProcessing);
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
 
         VisionThread visionThread = new VisionThread(
                 cameras.get(0),
-                new TemplateMatchingPipeline(templateMatcher, config.getTemplateMatchingScaleFactor(), cvSource),
+                new TemplateMatchingPipeline(templateMatcher, config.getTemplateMatchingScaleFactor(), cvSource, cvProcessing),
                 pipeline -> {
                 });
 
