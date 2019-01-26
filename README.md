@@ -39,7 +39,8 @@ The configuration is defined in `/boot/frc.json` by default, and contains the fo
 	               "name": <property name>
 	               "value": <property value>
 	           }
-	       ]
+	       ],
+	       "fov": <field of view of the camera in radians>
 	   }
 	],
 	"templateMatchingMethod": <value from the TemplateMatchingMethod enum, for example "SQDIFF_NORMED">,
