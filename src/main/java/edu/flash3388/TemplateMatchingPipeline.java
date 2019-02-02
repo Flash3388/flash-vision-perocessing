@@ -25,16 +25,17 @@ public class TemplateMatchingPipeline implements VisionPipeline {
     private final CvProcessing mCvProcessing;
     private final ImageAnalyser mImageAnalyser;
     private final double mCamFieldOfViewRadians;
+    private final Mat mTemplate;
 
-    public TemplateMatchingPipeline(TemplateMatcher templateMatcher, double initialScaleFactor, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser, double camFieldOfViewRadians) {
+    public TemplateMatchingPipeline(TemplateMatcher templateMatcher, double initialScaleFactor, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser, double camFieldOfViewRadians, Mat template) {
         mTemplateMatcher = templateMatcher;
         mInitialScaleFactor = initialScaleFactor;
         mResultOutput = resultOutput;
         mCvProcessing = cvProcessing;
         mImageAnalyser = imageAnalyser;
         mCamFieldOfViewRadians = camFieldOfViewRadians;
+        mTemplate = template;
     }
-
 
     @Override
     public void process(Mat image) {

@@ -121,7 +121,7 @@ public final class Main {
 
         VisionThread visionThread = new VisionThread(
                 cameras.get(0),
-                new TemplateMatchingPipeline(templateMatcher, config.getTemplateMatchingScaleFactor(), cvSource, cvProcessing, imageAnalyser, config.getCameraConfigs().get(0).getCameraFieldOfViewRadians()),
+                new TemplateMatchingPipeline(templateMatcher, config.getTemplateMatchingScaleFactor(), cvSource, cvProcessing, imageAnalyser, config.getCameraConfigs().get(0).getCameraFieldOfViewRadians(), template),
                 pipeline -> {
                 });
 
