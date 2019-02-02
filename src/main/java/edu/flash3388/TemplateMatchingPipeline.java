@@ -2,9 +2,9 @@ package edu.flash3388;
 
 import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
-import edu.flash3388.vision.template.ScaledTemplateMatchingResult;
 import edu.flash3388.vision.template.TemplateMatcher;
 import edu.flash3388.vision.template.TemplateMatchingException;
+import edu.flash3388.vision.template.TemplateMatchingResult;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;
 import org.opencv.core.Mat;
@@ -64,7 +64,7 @@ public class TemplateMatchingPipeline implements VisionPipeline {
              * matchWithScaling will attempt to match the template (or templates) with the image, returning the best match (score wise).
              * The image will be scaled to match the template, by the scale factor given, until they are the same size.
              */
-            ScaledTemplateMatchingResult result = mTemplateMatcher.matchWithScaling(hsvImage, mInitialScaleFactor);
+            TemplateMatchingResult result = mTemplateMatcher.matchWithScaling(hsvImage, mInitialScaleFactor);
             if (result.getScore() >= MIN_SCORE) {
                 mResultOutput.putFrame(image);
                 return;
@@ -91,7 +91,7 @@ public class TemplateMatchingPipeline implements VisionPipeline {
         }
     }
 
-    private void drawResult(Mat image, ScaledTemplateMatchingResult result) {
+    private void drawResult(Mat image, TemplateMatchingResult result) {
         // draw a line over the center of the image
         Imgproc.line(image, new Point(image.width() * 0.5, 0.0), new Point(image.width() * 0.5, image.height()), DRAW_CIRCLE_COLOR);
         // draw center point circle
