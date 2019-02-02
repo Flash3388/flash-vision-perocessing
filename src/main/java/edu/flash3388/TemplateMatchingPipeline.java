@@ -15,6 +15,7 @@ import org.opencv.imgproc.Imgproc;
 
 public class TemplateMatchingPipeline implements VisionPipeline {
 
+    private static final double MIN_SCORE = 0.9;
     private static final int DRAW_CIRCLE_RADIUS = 5;
     private static final Scalar DRAW_CIRCLE_COLOR = new Scalar(255, 0, 0);
 
@@ -64,7 +65,12 @@ public class TemplateMatchingPipeline implements VisionPipeline {
              * The image will be scaled to match the template, by the scale factor given, until they are the same size.
              */
             ScaledTemplateMatchingResult result = mTemplateMatcher.matchWithScaling(hsvImage, mInitialScaleFactor);
-            drawResult(image, result);
+            if (result.getScore() >= MIN_SCORE) {
+                mResultOutput.putFrame(image);
+                return;
+            }
+
+            drawResult(hsvImage, result);
 
 
             // TODO: ADD CODE TO WRITE OUTPUT INTO TABLE. MAY ALSO WRITE INFORMATION ABOUT THE IMAGE
@@ -76,9 +82,8 @@ public class TemplateMatchingPipeline implements VisionPipeline {
              */
 
             // this is the width of the template used in real life in CM
-            double realObjectWidthCm = 15.0;
-            double distanceToTargetCm = mImageAnalyser.measureDistance(image.width(), image.width(), realObjectWidthCm, mCamFieldOfViewRadians);
-
+            double realObjectWidthCm = 30.0;
+            double distanceToTargetCm = mImageAnalyser.measureDistance(image.width(), mTemplate.width(), realObjectWidthCm, mCamFieldOfViewRadians);
             double degressToTarget = mImageAnalyser.calculateHorizontalOffsetDegrees(image, result.getCenterPoint(), Math.toDegrees(mCamFieldOfViewRadians));
         } catch (TemplateMatchingException e) {
             // change this however you want
