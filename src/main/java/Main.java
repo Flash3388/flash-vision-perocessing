@@ -21,6 +21,7 @@ import edu.wpi.first.NtMode;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionThread;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
@@ -112,7 +113,7 @@ public final class Main {
     }
 
     private static void startVisionThread(List<VideoSource> cameras, Config config) {
-        Mat template = Imgcodecs.imread(config.getVisionTemplate().getAbsolutePath());
+        Mat template = Imgcodecs.imread(config.getVisionTemplate().getAbsolutePath(), CvType.CV_8UC1);
         CvProcessing cvProcessing = new CvProcessing();
         ImageAnalyser imageAnalyser = new ImageAnalyser();
 
