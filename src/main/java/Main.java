@@ -7,6 +7,8 @@
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import edu.flash3388.ScoreMatchingPipeline;
 import edu.flash3388.TemplateMatchingPipeline;
 import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
@@ -112,16 +114,14 @@ public final class Main {
     }
 
     private static void startVisionThread(List<VideoSource> cameras, Config config) {
-        Mat template = Imgcodecs.imread(config.getVisionTemplate().getAbsolutePath());
         CvProcessing cvProcessing = new CvProcessing();
         ImageAnalyser imageAnalyser = new ImageAnalyser();
 
-        TemplateMatcher templateMatcher = new SingleTemplateMatcher(template, config.getTemplateMatchingMethod(), cvProcessing);
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
-
+        
         VisionThread visionThread = new VisionThread(
                 cameras.get(0),
-                new TemplateMatchingPipeline(templateMatcher, config.getTemplateMatchingScaleFactor(), cvSource, cvProcessing, imageAnalyser, config.getCameraConfigs().get(0).getCameraFieldOfViewRadians()),
+                new ScoreMatchingPipeline(cvSource, cvProcessing, imageAnalyser, config.getCameraConfigs().get(0).getCameraFieldOfViewRadians()),
                 pipeline -> {
                 });
 
