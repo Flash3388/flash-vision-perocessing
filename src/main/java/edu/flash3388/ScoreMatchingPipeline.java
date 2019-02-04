@@ -89,12 +89,12 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 				MatOfPoint2f cnt2f = new MatOfPoint2f(c.toArray());
 				RotatedRect rect = Imgproc.minAreaRect(cnt2f);
 				drawRotatedRect(image, rect);
+				
 				if(rect.size.width < rect.size.height)
 					rect.angle += 180; 
 				else
 					rect.angle += 90;
-				
-				
+
 				rects.add(rect);
 			}
 			
@@ -103,7 +103,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			for(RotatedRect rect1 : rects)
 				for(RotatedRect rect2 : rects){
 					if(rect1.center != rect2.center){ // not same rect
-						double score = (rect1.angle + rect2.angle) / 180.0; //angle sum should be 180
+						double score = ((rect1.angle + rect2.angle)%360) / 180.0; //angle sum should be 180
 						if(score > 1.0)
 							score = 1.0 - (score - 1.0); // lats pray
 						pairs.add(new RectsPair(rect1, rect2, score));
@@ -119,8 +119,8 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			if(bestPair != null)
 			{
 				System.out.println("we got best");
-				Imgproc.circle(image, bestPair.rect1.center, DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
-				Imgproc.circle(image, bestPair.rect2.center, DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
+				System.out.println();
+				Imgproc.circle(image, new Point((bestPair.rect2.center.x + bestPair.rect1.center.x)/2.0,(bestPair.rect2.center.y + bestPair.rect1.center.y)/2.0), DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
 			}
 
 			if(!write){		
