@@ -23,6 +23,8 @@ import edu.flash3388.vision.template.TemplateMatchingException;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;
 
+import edu.flash3388.RectsPair;
+
 public class ScoreMatchingPipeline implements VisionPipeline {
 
 	private static final int DRAW_CIRCLE_RADIUS = 5;
@@ -36,19 +38,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 	private boolean write = false;
 
-	private class RectsPair {
-		public RotatedRect rect1;
-		public RotatedRect rect2;
-		public double score;
-
-		public RectsPair(RotatedRect rect1, RotatedRect rect2, double score) {
-			this.rect1 = rect1;
-			this.rect2 = rect2;
-			this.score = score;
-		}
-
-	}
-
+	
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
 		mResultOutput = resultOutput;
@@ -103,16 +93,12 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 				}
 			}
 			
-			
 			List<RectsPair> pairs = new ArrayList<RectsPair>();
-			for(RotatedRect rect1 : rects)
-				for(RotatedRect rect2 : rects){
-					if(rect1.center != rect2.center){ // not same rect
-						double score = ((rect1.angle + rect2.angle) %360) / 180.0; //angle sum should be 180
-						if(score > 1.0)
-							score = 1.0 - (score - 1.0); // lats pray
-						pairs.add(new RectsPair(rect1, rect2, score));
-					}
+			for(int i = 1; i < rects.size(); i++)
+				for(int j = 0; j < i; j++){
+					RotatedRect rect1 = rects.get(i);
+					RotatedRect rect2 = rects.get(j);
+					pairs.add(new RectsPair(rect1, rect2));
 				}
 			
 			System.out.println(pairs.size());
@@ -128,18 +114,6 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 			mResultOutput.putFrame(pushImage);
 			
-			/*
-			// drawResult(image, result);
-
-			// TODO: ADD CODE TO WRITE OUTPUT INTO TABLE. MAY ALSO WRITE INFORMATION ABOUT
-			// THE IMAGE
-			/*
-			 * result contains the following information: - the center point of the matched
-			 * template on the given image (x, y) - scale factor used to match the image -
-			 * matching score, which indicates what score was received for this match
-			 * (highest match out of all matches.
-			 */
-
 			// this is the width of the template used in real life in CM
 			// double realObjectWidthCm = 15.0;
 			// double distanceToTargetCm = mImageAnalyser.measureDistance(image.width(),
