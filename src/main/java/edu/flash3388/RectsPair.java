@@ -33,6 +33,13 @@ public class RectsPair implements Comparable<RectsPair> {
 		else
 			return rect1.center.y / rect2.center.y;
 	}
+	public double centerDistance()
+	{
+		double xdiff = Math.abs(rect1.center.x - rect2.center.x);
+		return xdiff;
+		//double ydiff = rect1.center.y - rect2.center.y;
+		//return Math.sqrt(xdiff*xdiff + ydiff*ydiff);
+	}
 	public double fixScore(double score) {
 		if(score > 1.0)
 			score = 1.0 - (score - 1.0);

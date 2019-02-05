@@ -99,25 +99,22 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			}
 			System.out.println(rects.size());
 			
-			List<RectsPair> pairs = new ArrayList<RectsPair>();
-			for(int i = 1; i < rects.size(); i++)
-				for(int j = 0; j < i; j++){
-					RotatedRect rect1 = rects.get(i);
-					RotatedRect rect2 = rects.get(j);
-					pairs.add(new RectsPair(rect1, rect2));
-				}
-			
-			
+			List<RectsPair> pairs = getRectsPairs(rects);
 			
 			if(pairs.size() > 0)
 			{
 				Collections.sort(pairs);
 				RectsPair bestPair = pairs.get(0);
+				drawRes(pushImage, bestPair);
 				
-				Imgproc.circle(pushImage,bestPair.rect1.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
-				Imgproc.circle(pushImage,bestPair.rect2.center, DRAW_CIRCLE_RADIUS - 1 , BEST_PAIR_COLOR);
-				System.out.println(String.format("best score - %f", (float)bestPair.score));
-				Imgproc.circle(pushImage, new Point((bestPair.rect2.center.x + bestPair.rect1.center.x)/2.0,(bestPair.rect2.center.y + bestPair.rect1.center.y)/2.0), DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
+				double realObjectWidthCm = 30.0;
+				double centerdist = bestPair.centerDistance();	
+				double distanceToTargetCm = mImageAnalyser.measureDistance((double)image.width(),
+						 centerdist, realObjectWidthCm, mCamFieldOfViewRadians);
+				System.out.println(String.format("distance %f" , (float)distanceToTargetCm));
+				// double degressToTarget =
+				// result.getCenterPoint(), Math.toDegrees(mCamFieldOfViewRadians));
+
 			}
 			// just for debugging
 			if(!write){		
@@ -129,17 +126,28 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			mResultOutput.putFrame(pushImage);
 			
 			// this is the width of the template used in real life in CM
-			// double realObjectWidthCm = 15.0;
-			// double distanceToTargetCm = mImageAnalyser.measureDistance(image.width(),
-			// image.width(), realObjectWidthCm, mCamFieldOfViewRadians);
-
-			// double degressToTarget =
-			// mImageAnalyser.calculateHorizontalOffsetDegrees(image,
-			// result.getCenterPoint(), Math.toDegrees(mCamFieldOfViewRadians));
 		} catch (Throwable e) {
 			// change this however you want
 			e.printStackTrace();
 		}
+	}
+
+	private List<RectsPair> getRectsPairs(List<RotatedRect> rects) {
+		List<RectsPair> pairs = new ArrayList<RectsPair>();
+		for(int i = 1; i < rects.size(); i++)
+			for(int j = 0; j < i; j++){
+				RotatedRect rect1 = rects.get(i);
+				RotatedRect rect2 = rects.get(j);
+				pairs.add(new RectsPair(rect1, rect2));
+			}
+		return pairs;
+	}
+
+	private void drawRes(Mat pushImage, RectsPair bestPair) {
+		Imgproc.circle(pushImage,bestPair.rect1.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
+		Imgproc.circle(pushImage,bestPair.rect2.center, DRAW_CIRCLE_RADIUS - 1 , BEST_PAIR_COLOR);
+		System.out.println(String.format("best score - %f", (float)bestPair.score));
+		Imgproc.circle(pushImage, new Point((bestPair.rect2.center.x + bestPair.rect1.center.x)/2.0,(bestPair.rect2.center.y + bestPair.rect1.center.y)/2.0), DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
 	}
 
 	private void drawRotatedRect(Mat image, RotatedRect rect, Scalar color) {
