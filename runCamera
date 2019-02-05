@@ -1,4 +1,4 @@
 #!/bin/sh
-echo "Waiting 5 seconds..."
-sleep 5
+echo "Waiting 1 seconds..."
+sleep 1
 exec env LD_LIBRARY_PATH=/usr/local/frc/lib java -jar java-multiCameraServer-all.jar

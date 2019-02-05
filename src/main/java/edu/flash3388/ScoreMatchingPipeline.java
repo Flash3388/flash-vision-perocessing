@@ -1,6 +1,7 @@
 package edu.flash3388;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.opencv.core.CvType;
@@ -29,6 +30,9 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 	private static final int DRAW_CIRCLE_RADIUS = 5;
 	private static final Scalar DRAW_CIRCLE_COLOR = new Scalar(255, 0, 0);
+	private static final Scalar BEST_PAIR_COLOR = new Scalar(78, 150, 200);
+
+	private static final int doble= 5;
 
 	private static final double APPROX_EPSILON = 0.1;
 	private final CvSource mResultOutput;
@@ -50,6 +54,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	@Override
 	public void process(Mat image) {
 		try {
+			//image = Imgcodecs.imread("/home/pi/templates/templ2019.jpg");
 			// will use this to perform vision processing, so that the original image
 			// remains intact to draw info on it
 			Mat hsvImage = new Mat();
@@ -83,7 +88,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 				RotatedRect rect = Imgproc.minAreaRect(cnt2f);
 				if(rect.boundingRect().area() > 10.0)
 				{
-					drawRotatedRect(pushImage, rect);	
+					drawRotatedRect(pushImage, rect, DRAW_CIRCLE_COLOR);	
 					if(rect.size.width < rect.size.height)
 						rect.angle += 180; 
 					else
@@ -92,6 +97,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 					rects.add(rect);
 				}
 			}
+			System.out.println(rects.size());
 			
 			List<RectsPair> pairs = new ArrayList<RectsPair>();
 			for(int i = 1; i < rects.size(); i++)
@@ -101,17 +107,25 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 					pairs.add(new RectsPair(rect1, rect2));
 				}
 			
-			System.out.println(pairs.size());
-			RectsPair bestPair = null;
-			for(RectsPair pair : pairs)
-				if(bestPair == null || bestPair.score > pair.score)
-					bestPair = pair;
-			if(bestPair != null)
+			
+			
+			if(pairs.size() > 0)
 			{
+				Collections.sort(pairs);
+				RectsPair bestPair = pairs.get(0);
+				
+				Imgproc.circle(pushImage,bestPair.rect1.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
+				Imgproc.circle(pushImage,bestPair.rect2.center, DRAW_CIRCLE_RADIUS - 1 , BEST_PAIR_COLOR);
 				System.out.println(String.format("best score - %f", (float)bestPair.score));
 				Imgproc.circle(pushImage, new Point((bestPair.rect2.center.x + bestPair.rect1.center.x)/2.0,(bestPair.rect2.center.y + bestPair.rect1.center.y)/2.0), DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
 			}
-
+			// just for debugging
+			if(!write){		
+				System.out.println("writing image");
+				write = true;
+				Imgcodecs.imwrite("/home/pi/res1.jpg", pushImage);
+			}
+			
 			mResultOutput.putFrame(pushImage);
 			
 			// this is the width of the template used in real life in CM
@@ -128,7 +142,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		}
 	}
 
-	private void drawRotatedRect(Mat image, RotatedRect rect) {
+	private void drawRotatedRect(Mat image, RotatedRect rect, Scalar color) {
 		MatOfPoint verticies = new MatOfPoint();
 
 		Imgproc.boxPoints(rect, verticies);
@@ -138,25 +152,15 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		Point p3 = new Point((int) verticies.get(2, 0)[0], (int) verticies.get(2, 1)[0]);
 		Point p4 = new Point((int) verticies.get(3, 0)[0], (int) verticies.get(3, 1)[0]);
 
-		this.drawBox(image, p1, p2, p3, p4);
+		this.drawBox(image, p1, p2, p3, p4, color);
 	}
 
-	private void drawBox(Mat image, Point p1, Point p2, Point p3, Point p4) {
-		Imgproc.line(image, p1, p2, DRAW_CIRCLE_COLOR, 2);
-		Imgproc.line(image, p2, p3, DRAW_CIRCLE_COLOR, 2);
-		Imgproc.line(image, p3, p4, DRAW_CIRCLE_COLOR, 2);
-		Imgproc.line(image, p4, p1, DRAW_CIRCLE_COLOR, 2);
+	private void drawBox(Mat image, Point p1, Point p2, Point p3, Point p4, Scalar color) {
+		Imgproc.line(image, p1, p2, color, 2);
+		Imgproc.line(image, p2, p3, color, 2);
+		Imgproc.line(image, p3, p4, color, 2);
+		Imgproc.line(image, p4, p1, color, 2);
 
-	}
-
-	private void drawResult(Mat image, ScaledTemplateMatchingResult result) {
-		// draw a line over the center of the image
-		Imgproc.line(image, new Point(image.width() * 0.5, 0.0), new Point(image.width() * 0.5, image.height()),
-				DRAW_CIRCLE_COLOR);
-		// draw center point circle
-		Imgproc.circle(image, result.getCenterPoint(), DRAW_CIRCLE_RADIUS, DRAW_CIRCLE_COLOR);
-
-		mResultOutput.putFrame(image);
 	}
 
 }
