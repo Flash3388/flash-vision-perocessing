@@ -1,7 +1,6 @@
 package edu.flash3388;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.opencv.core.Mat;
@@ -15,7 +14,6 @@ import org.opencv.imgproc.Imgproc;
 
 import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
-import edu.flash3388.vision.template.ScaledTemplateMatchingResult;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;
 
