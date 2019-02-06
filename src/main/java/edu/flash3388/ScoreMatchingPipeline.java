@@ -3,129 +3,150 @@ package edu.flash3388;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Range;
-import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
 import edu.flash3388.vision.template.ScaledTemplateMatchingResult;
-import edu.flash3388.vision.template.TemplateMatcher;
-import edu.flash3388.vision.template.TemplateMatchingException;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;
 
-import edu.flash3388.RectsPair;
+import edu.flash3388.RectPair;
 
 public class ScoreMatchingPipeline implements VisionPipeline {
 
 	private static final int DRAW_CIRCLE_RADIUS = 5;
+	private static final double MIN_COUNTOR_SIZE = 10.0;
 	private static final Scalar DRAW_CIRCLE_COLOR = new Scalar(255, 0, 0);
+	private static final Scalar BEST_PAIR_COLOR = new Scalar(78, 150, 200);
+
+	private static final int MIN_HUE = 0;
+	private static final int MAX_HUE = 100;
+	private static final int MIN_SATURATION = 0;
+	private static final int MAX_SATURATION = 255;
+	private static final int MIN_VALUE = 220;
+	private static final int MAX_VALUE = 255;
 
 	private static final double APPROX_EPSILON = 0.1;
+	private final double mRealTargetLength;
+
 	private final CvSource mResultOutput;
 	private final CvProcessing mCvProcessing;
 	private final ImageAnalyser mImageAnalyser;
 	private final double mCamFieldOfViewRadians;
-
-	private boolean write = false;
-
 	
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
+		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
+	}
+
+	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
+			double camFieldOfViewRadians, double realTargetLength) {
 		mResultOutput = resultOutput;
 		mCvProcessing = cvProcessing;
 		mImageAnalyser = imageAnalyser;
 		mCamFieldOfViewRadians = camFieldOfViewRadians;
+		mRealTargetLength = realTargetLength;
 	}
 
 	@Override
 	public void process(Mat image) {
 		try {
-			// will use this to perform vision processing, so that the original image
-			// remains intact to draw info on it
 			Mat hsvImage = new Mat();
+			Mat pushImage = new Mat();
 
-			/*
-			 * Convert the image to HSV color scheme
-			 */
 			mCvProcessing.rgbToHsv(image, hsvImage);
 
-			/*
-			 * These values represent the color filtering range. You may edit them through
-			 * network tables.
-			 */
-			Range hue = new Range(0, 180);
-			Range saturation = new Range(0, 255);
-			Range value = new Range(220, 255);
+			Range hue = new Range(MIN_HUE, MAX_HUE);
+			Range saturation = new Range(MIN_SATURATION, MAX_SATURATION);
+			Range value = new Range(MIN_VALUE, MAX_VALUE);
 
-			/*
-			 * Filter the image by color range
-			 */
 			mCvProcessing.filterMatColors(hsvImage, hsvImage, hue, saturation, value);
-			List<MatOfPoint> contours = mCvProcessing.detectContours(hsvImage);
-						
-			List<RotatedRect> rects = new ArrayList<RotatedRect>();
-			Mat pushImage = new Mat();
 			Imgproc.cvtColor(hsvImage, pushImage, Imgproc.COLOR_GRAY2RGB);
-			for (MatOfPoint c : contours) {
-					
-				MatOfPoint2f cnt2f = new MatOfPoint2f(c.toArray());
-			
-				RotatedRect rect = Imgproc.minAreaRect(cnt2f);
-				if(rect.boundingRect().area() > 10.0)
-				{
-					drawRotatedRect(pushImage, rect);	
-					if(rect.size.width < rect.size.height)
-						rect.angle += 180; 
-					else
-						rect.angle += 90;
-	
-					rects.add(rect);
-				}
-			}
-			
-			List<RectsPair> pairs = new ArrayList<RectsPair>();
-			for(int i = 1; i < rects.size(); i++)
-				for(int j = 0; j < i; j++){
-					RotatedRect rect1 = rects.get(i);
-					RotatedRect rect2 = rects.get(j);
-					pairs.add(new RectsPair(rect1, rect2));
-				}
-			
-			System.out.println(pairs.size());
-			RectsPair bestPair = null;
-			for(RectsPair pair : pairs)
-				if(bestPair == null || bestPair.score > pair.score)
-					bestPair = pair;
-			if(bestPair != null)
-			{
-				System.out.println(String.format("best score - %f", (float)bestPair.score));
-				Imgproc.circle(pushImage, new Point((bestPair.rect2.center.x + bestPair.rect1.center.x)/2.0,(bestPair.rect2.center.y + bestPair.rect1.center.y)/2.0), DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
-			}
 
-			mResultOutput.putFrame(pushImage);
-			
-			// this is the width of the template used in real life in CM
-			// double realObjectWidthCm = 15.0;
-			// double distanceToTargetCm = mImageAnalyser.measureDistance(image.width(),
-			// image.width(), realObjectWidthCm, mCamFieldOfViewRadians);
+			List<RectPair> bestPairs = getBestPairs(
+					getPairs(getRects(mCvProcessing.detectContours(hsvImage), pushImage)), 1);
 
-			// double degressToTarget =
-			// mImageAnalyser.calculateHorizontalOffsetDegrees(image,
-			// result.getCenterPoint(), Math.toDegrees(mCamFieldOfViewRadians));
+			markBestPairs(bestPairs, pushImage);
 		} catch (Throwable e) {
-			// change this however you want
 			e.printStackTrace();
 		}
+	}
+	
+	private double getDistanceCM(RectPair pair, double imageWidth) {
+		return mImageAnalyser.measureDistance(imageWidth, pair.centerDistance(),
+				mRealTargetLength, mCamFieldOfViewRadians);
+
+	}
+	
+	private void markBestPairs(List<RectPair> bestPairs, Mat pushImage) {
+		for (RectPair bestPair : bestPairs) {
+			Imgproc.circle(pushImage, bestPair.rect1.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
+			Imgproc.circle(pushImage, bestPair.rect2.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
+			System.out.println(String.format("best score - %f", (float) bestPair.score));
+			Imgproc.circle(pushImage,
+					new Point((bestPair.rect2.center.x + bestPair.rect1.center.x) / 2.0,
+							(bestPair.rect2.center.y + bestPair.rect1.center.y) / 2.0),
+					DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
+		}
+		
+		mResultOutput.putFrame(pushImage);
+	}
+	
+	private List<RectPair> getBestPairs(List<RectPair> pairs, int numberOfPairs) {
+		List<RectPair> bestPairs = new ArrayList<>();
+		
+		for (int i = 0; i < numberOfPairs; ++i) {
+			RectPair bestPair = null;
+
+			for (RectPair pair : pairs)
+				if (bestPair == null || bestPair.score < pair.score)
+					bestPair = pair;
+
+			pairs.remove(bestPair);
+			bestPairs.add(bestPair);
+		}
+		
+		return bestPairs;
+	}
+	
+	private List<RectPair> getPairs(List<RotatedRect> rects) {
+		List<RectPair> pairs = new ArrayList<RectPair>();
+
+		for (int i = 1; i < rects.size(); ++i)
+			for (int j = 0; j < i; j++) 
+				pairs.add(new RectPair(rects.get(i), rects.get(j)));
+		
+		return pairs;
+	}
+	
+	private List<RotatedRect> getRects(List<MatOfPoint> contours, Mat pushImage) {
+		List<RotatedRect> rects = new ArrayList<RotatedRect>();
+
+		for (MatOfPoint c : contours) {
+
+			MatOfPoint2f cnt2f = new MatOfPoint2f(c.toArray());
+
+			RotatedRect rect = Imgproc.minAreaRect(cnt2f);
+			if (rect.boundingRect().area() > MIN_COUNTOR_SIZE) {
+				drawRotatedRect(pushImage, rect);
+				if (rect.size.width < rect.size.height)
+					rect.angle += 180;
+				else
+					rect.angle += 90;
+
+				rects.add(rect);
+			}
+		}
+
+		return rects;
 	}
 
 	private void drawRotatedRect(Mat image, RotatedRect rect) {
@@ -148,15 +169,4 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		Imgproc.line(image, p4, p1, DRAW_CIRCLE_COLOR, 2);
 
 	}
-
-	private void drawResult(Mat image, ScaledTemplateMatchingResult result) {
-		// draw a line over the center of the image
-		Imgproc.line(image, new Point(image.width() * 0.5, 0.0), new Point(image.width() * 0.5, image.height()),
-				DRAW_CIRCLE_COLOR);
-		// draw center point circle
-		Imgproc.circle(image, result.getCenterPoint(), DRAW_CIRCLE_RADIUS, DRAW_CIRCLE_COLOR);
-
-		mResultOutput.putFrame(image);
-	}
-
 }

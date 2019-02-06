@@ -118,18 +118,16 @@ public final class Main {
         ImageAnalyser imageAnalyser = new ImageAnalyser();
 
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
-        
-        VisionThread visionThread = new VisionThread(
-                cameras.get(0),
-                new ScoreMatchingPipeline(cvSource, cvProcessing, imageAnalyser, config.getCameraConfigs().get(0).getCameraFieldOfViewRadians()),
-                pipeline -> {
+        CameraConfig camConfigs = config.getCameraConfigs().get(0);
+        VisionThread visionThread = new VisionThread(cameras.get(0), new ScoreMatchingPipeline(cvSource, cvProcessing,
+                imageAnalyser, camConfigs.getCameraFieldOfViewRadians()), pipeline -> {
                 });
 
         visionThread.start();
     }
 
     private static void waitForever() {
-        for (; ; ) {
+        for (;;) {
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException ex) {
