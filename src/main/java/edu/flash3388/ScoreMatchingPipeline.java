@@ -39,42 +39,36 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private final CvProcessing mCvProcessing;
 	private final ImageAnalyser mImageAnalyser;
 	private final double mCamFieldOfViewRadians;
+	private final double mRealTargetLength;
 
 	private boolean write = false;
 
-	
+
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
+		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
+	}
+	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
+			double camFieldOfViewRadians, double realTargetLength) {
 		mResultOutput = resultOutput;
 		mCvProcessing = cvProcessing;
 		mImageAnalyser = imageAnalyser;
 		mCamFieldOfViewRadians = camFieldOfViewRadians;
+		mRealTargetLength = realTargetLength;
 	}
 
 	@Override
 	public void process(Mat image) {
 		try {
 			//image = Imgcodecs.imread("/home/pi/templates/templ2019.jpg");
-			// will use this to perform vision processing, so that the original image
-			// remains intact to draw info on it
 			Mat hsvImage = new Mat();
 
-			/*
-			 * Convert the image to HSV color scheme
-			 */
 			mCvProcessing.rgbToHsv(image, hsvImage);
 
-			/*
-			 * These values represent the color filtering range. You may edit them through
-			 * network tables.
-			 */
 			Range hue = new Range(0, 180);
 			Range saturation = new Range(0, 255);
 			Range value = new Range(220, 255);
 
-			/*
-			 * Filter the image by color range
-			 */
 			mCvProcessing.filterMatColors(hsvImage, hsvImage, hue, saturation, value);
 			List<MatOfPoint> contours = mCvProcessing.detectContours(hsvImage);
 						
@@ -82,14 +76,11 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			Mat pushImage = new Mat();
 			Imgproc.cvtColor(hsvImage, pushImage, Imgproc.COLOR_GRAY2RGB);
 			for (MatOfPoint c : contours) {
-					
-				MatOfPoint2f cnt2f = new MatOfPoint2f(c.toArray());
-			
+				MatOfPoint2f cnt2f = new MatOfPoint2f(c.toArray());			
 				RotatedRect rect = Imgproc.minAreaRect(cnt2f);
-				if(rect.boundingRect().area() > 10.0)
-				{
+				if(rect.boundingRect().area() > 10.0) { // magical number for filtering really small countours
 					drawRotatedRect(pushImage, rect, DRAW_CIRCLE_COLOR);	
-					if(rect.size.width < rect.size.height)
+					if(rect.size.width < rect.size.height) //fixing the angle to be clockwise
 						rect.angle += 180; 
 					else
 						rect.angle += 90;
@@ -97,20 +88,16 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 					rects.add(rect);
 				}
 			}
-			System.out.println(rects.size());
 			
 			List<RectsPair> pairs = getRectsPairs(rects);
-			
-			if(pairs.size() > 0)
-			{
+			if(pairs.size() > 0) { // creating the result 
 				Collections.sort(pairs);
 				RectsPair bestPair = pairs.get(0);
 				drawRes(pushImage, bestPair);
 				
-				double realObjectWidthCm = 30.0;
 				double centerdist = bestPair.centerDistance();	
 				double distanceToTargetCm = mImageAnalyser.measureDistance((double)image.width(),
-						 centerdist, realObjectWidthCm, mCamFieldOfViewRadians);
+						 centerdist, this.mRealTargetLength, mCamFieldOfViewRadians);
 				System.out.println(String.format("distance %f" , (float)distanceToTargetCm));
 				// double degressToTarget =
 				// result.getCenterPoint(), Math.toDegrees(mCamFieldOfViewRadians));
@@ -125,7 +112,6 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			
 			mResultOutput.putFrame(pushImage);
 			
-			// this is the width of the template used in real life in CM
 		} catch (Throwable e) {
 			// change this however you want
 			e.printStackTrace();

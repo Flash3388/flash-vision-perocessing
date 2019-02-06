@@ -118,10 +118,10 @@ public final class Main {
         ImageAnalyser imageAnalyser = new ImageAnalyser();
 
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
-        
+        CameraConfig camConfigs = config.getCameraConfigs().get(0);
         VisionThread visionThread = new VisionThread(
                 cameras.get(0),
-                new ScoreMatchingPipeline(cvSource, cvProcessing, imageAnalyser, config.getCameraConfigs().get(0).getCameraFieldOfViewRadians()),
+                new ScoreMatchingPipeline(cvSource, cvProcessing, imageAnalyser, camConfigs.getCameraFieldOfViewRadians()),
                 pipeline -> {
                 });
 
