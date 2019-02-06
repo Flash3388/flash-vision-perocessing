@@ -20,6 +20,7 @@ import edu.wpi.first.NtMode;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionThread;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -111,7 +112,6 @@ public final class Main {
     private static void startVisionThread(List<VideoSource> cameras, Config config) {
         CvProcessing cvProcessing = new CvProcessing();
         ImageAnalyser imageAnalyser = new ImageAnalyser();
-
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
         CameraConfig camConfigs = config.getCameraConfigs().get(0);
         VisionThread visionThread = new VisionThread(

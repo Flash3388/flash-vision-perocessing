@@ -1,0 +1,19 @@
+{
+    "cameras": [
+        {
+            "fps": 30,
+            "height": 480,
+            "name": "rPi Camera 0",
+            "path": "/dev/video0",
+            "pixel format": "mjpeg",
+            "width": 320,
+            "fov": 0.43388
+        }
+    ],
+    "ntmode": "client",
+    "team": 3388,
+    "templateMatchingMethod": "SQDIFF_NORMED",
+    "visionTemplatePath": "/home/pi/templates/",
+    "templateMatchingScaleFactor": 2.0
+
+}

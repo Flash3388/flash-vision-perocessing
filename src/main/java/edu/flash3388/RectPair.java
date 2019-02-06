@@ -20,15 +20,20 @@ public class RectPair implements Comparable<RectPair> {
 	}
 
 	public double calcScore() {
-		double angleScore = ((rect1.angle + rect2.angle) % 360) / 180.0; // angle sum should be 180
-
-		double yPosScore = calcYPosScore(rect1, rect2);
-
+		double angleScore = fixScore(((rect1.angle + rect2.angle) % 360) / 180.0); // angle sum should be 180
+		double yPosScore = calcYPosScore();
+		double centerHeightScore = fixScore(this.calcCenterHeightScore());
 		// double distScore = (rect1.boundingRect().height) // might be error
-		return (this.fixScore(angleScore) + yPosScore) / 2;
+		return (angleScore + yPosScore + centerHeightScore) / 3;
 	}
-
-	private double calcYPosScore(RotatedRect rect1, RotatedRect rect2) {
+	
+	private double calcCenterHeightScore() {
+		return (centerDistance()/ getHeight())/ (30/14.0);
+	}
+	private double getHeight() { // in case that opencv was wrong, height is bigger
+		return Math.max(rect1.boundingRect().height, rect1.boundingRect().width);
+	}
+	private double calcYPosScore() {
 		if (rect1.center.y >= rect2.center.y)
 			return rect2.center.y / rect1.center.y;
 		else

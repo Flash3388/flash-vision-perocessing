@@ -1,6 +1,7 @@
 package edu.flash3388;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.opencv.core.Mat;
@@ -16,7 +17,8 @@ import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;
-
+import javafx.print.Collation;
+import sun.text.resources.sk.CollationData_sk;
 import edu.flash3388.RectPair;
 
 public class ScoreMatchingPipeline implements VisionPipeline {
@@ -72,12 +74,22 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 			mCvProcessing.filterMatColors(hsvImage, hsvImage, hue, saturation, value);
 			Imgproc.cvtColor(hsvImage, pushImage, Imgproc.COLOR_GRAY2RGB);
+			List<MatOfPoint> countours = mCvProcessing.detectContours(hsvImage);
+			List<RotatedRect> rotatedRects = getRotatedRects(countours);
+			List<RectPair> listRectPair = getPairs(rotatedRects);
+			Collections.sort(listRectPair);
+			RectPair bestPair = listRectPair.get(0);
+			
+			Imgproc.circle(pushImage, bestPair.rect1.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
+			Imgproc.circle(pushImage, bestPair.rect2.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
+			System.out.println(String.format("best score - %f", (float) bestPair.score));
+			Imgproc.circle(pushImage,
+					new Point((bestPair.rect2.center.x + bestPair.rect1.center.x) / 2.0,
+							(bestPair.rect2.center.y + bestPair.rect1.center.y) / 2.0),
+					DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
 
-			List<RectPair> bestPairs = getBestPairs(
-					getPairs(getRects(mCvProcessing.detectContours(hsvImage), pushImage)), 1);
-
-			markBestPairs(bestPairs, pushImage);
-
+			mResultOutput.putFrame(pushImage);
+			
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
@@ -86,21 +98,6 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private double getDistanceCM(RectPair pair, double imageWidth) {
 		return mImageAnalyser.measureDistance(imageWidth, pair.centerDistance(),
 				mRealTargetLength, mCamFieldOfViewRadians);
-
-	}
-	
-	private void markBestPairs(List<RectPair> bestPairs, Mat pushImage) {
-		for (RectPair bestPair : bestPairs) {
-			Imgproc.circle(pushImage, bestPair.rect1.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
-			Imgproc.circle(pushImage, bestPair.rect2.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
-			System.out.println(String.format("best score - %f", (float) bestPair.score));
-			Imgproc.circle(pushImage,
-					new Point((bestPair.rect2.center.x + bestPair.rect1.center.x) / 2.0,
-							(bestPair.rect2.center.y + bestPair.rect1.center.y) / 2.0),
-					DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
-		}
-		
-		mResultOutput.putFrame(pushImage);
 	}
 	
 	private List<RectPair> getBestPairs(List<RectPair> pairs, int numberOfPairs) {
@@ -130,7 +127,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		return pairs;
 	}
 	
-	private List<RotatedRect> getRects(List<MatOfPoint> contours, Mat pushImage) {
+	private List<RotatedRect> getRotatedRects(List<MatOfPoint> contours) {
 		List<RotatedRect> rects = new ArrayList<RotatedRect>();
 
 		for (MatOfPoint c : contours) {
@@ -139,8 +136,6 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 			RotatedRect rect = Imgproc.minAreaRect(cnt2f);
 			if (rect.boundingRect().area() > MIN_COUNTOR_SIZE) {
-				drawRotatedRect(pushImage, rect, DRAW_CIRCLE_COLOR);
-				
 				if (rect.size.width < rect.size.height)
 					rect.angle += 180;
 				else
