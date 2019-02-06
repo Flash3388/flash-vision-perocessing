@@ -1,6 +1,7 @@
 package edu.flash3388;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.opencv.core.Mat;
@@ -41,7 +42,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private final CvProcessing mCvProcessing;
 	private final ImageAnalyser mImageAnalyser;
 	private final double mCamFieldOfViewRadians;
-	
+
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
 		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
@@ -59,6 +60,8 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	@Override
 	public void process(Mat image) {
 		try {
+			//image = Imgcodecs.imread("/home/pi/templates/templ2019.jpg");
+
 			Mat hsvImage = new Mat();
 			Mat pushImage = new Mat();
 
@@ -68,6 +71,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			Range saturation = new Range(MIN_SATURATION, MAX_SATURATION);
 			Range value = new Range(MIN_VALUE, MAX_VALUE);
 
+
 			mCvProcessing.filterMatColors(hsvImage, hsvImage, hue, saturation, value);
 			Imgproc.cvtColor(hsvImage, pushImage, Imgproc.COLOR_GRAY2RGB);
 
@@ -75,6 +79,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 					getPairs(getRects(mCvProcessing.detectContours(hsvImage), pushImage)), 1);
 
 			markBestPairs(bestPairs, pushImage);
+
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
@@ -136,7 +141,8 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 			RotatedRect rect = Imgproc.minAreaRect(cnt2f);
 			if (rect.boundingRect().area() > MIN_COUNTOR_SIZE) {
-				drawRotatedRect(pushImage, rect);
+				drawRotatedRect(pushImage, rect, DRAW_CIRCLE_COLOR);
+				
 				if (rect.size.width < rect.size.height)
 					rect.angle += 180;
 				else
@@ -149,7 +155,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		return rects;
 	}
 
-	private void drawRotatedRect(Mat image, RotatedRect rect) {
+	private void drawRotatedRect(Mat image, RotatedRect rect, Scalar color) {
 		MatOfPoint verticies = new MatOfPoint();
 
 		Imgproc.boxPoints(rect, verticies);
@@ -159,14 +165,14 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		Point p3 = new Point((int) verticies.get(2, 0)[0], (int) verticies.get(2, 1)[0]);
 		Point p4 = new Point((int) verticies.get(3, 0)[0], (int) verticies.get(3, 1)[0]);
 
-		this.drawBox(image, p1, p2, p3, p4);
+		drawBox(image, p1, p2, p3, p4, color);
 	}
 
-	private void drawBox(Mat image, Point p1, Point p2, Point p3, Point p4) {
-		Imgproc.line(image, p1, p2, DRAW_CIRCLE_COLOR, 2);
-		Imgproc.line(image, p2, p3, DRAW_CIRCLE_COLOR, 2);
-		Imgproc.line(image, p3, p4, DRAW_CIRCLE_COLOR, 2);
-		Imgproc.line(image, p4, p1, DRAW_CIRCLE_COLOR, 2);
+	private void drawBox(Mat image, Point p1, Point p2, Point p3, Point p4, Scalar color) {
+		Imgproc.line(image, p1, p2, color, 2);
+		Imgproc.line(image, p2, p3, color, 2);
+		Imgproc.line(image, p3, p4, color, 2);
+		Imgproc.line(image, p4, p1, color, 2);
 
 	}
 }

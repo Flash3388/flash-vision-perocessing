@@ -9,11 +9,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import edu.flash3388.ScoreMatchingPipeline;
-import edu.flash3388.TemplateMatchingPipeline;
 import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
-import edu.flash3388.vision.template.SingleTemplateMatcher;
-import edu.flash3388.vision.template.TemplateMatcher;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.CameraConfig;
@@ -23,8 +20,6 @@ import edu.wpi.first.NtMode;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionThread;
-import org.opencv.core.Mat;
-import org.opencv.imgcodecs.Imgcodecs;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -119,8 +114,10 @@ public final class Main {
 
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
         CameraConfig camConfigs = config.getCameraConfigs().get(0);
-        VisionThread visionThread = new VisionThread(cameras.get(0), new ScoreMatchingPipeline(cvSource, cvProcessing,
-                imageAnalyser, camConfigs.getCameraFieldOfViewRadians()), pipeline -> {
+        VisionThread visionThread = new VisionThread(
+                cameras.get(0),
+                new ScoreMatchingPipeline(cvSource, cvProcessing, imageAnalyser, camConfigs.getCameraFieldOfViewRadians()),
+                pipeline -> {
                 });
 
         visionThread.start();
