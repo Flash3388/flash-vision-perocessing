@@ -17,9 +17,6 @@ import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;
-import javafx.print.Collation;
-import sun.text.resources.sk.CollationData_sk;
-import edu.flash3388.RectPair;
 
 public class ScoreMatchingPipeline implements VisionPipeline {
 
