@@ -16,37 +16,42 @@ import org.opencv.imgproc.Imgproc;
 import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.vision.VisionPipeline;
 
 public class ScoreMatchingPipeline implements VisionPipeline {
 
 	private static final int DRAW_CIRCLE_RADIUS = 5;
-	private static final double MIN_COUNTOR_SIZE = 10.0;
+	private static final double MIN_COUNTOR_SIZE = 20;
 	private static final Scalar DRAW_CIRCLE_COLOR = new Scalar(255, 0, 0);
 	private static final Scalar BEST_PAIR_COLOR = new Scalar(78, 150, 200);
 
 	private static final int MIN_HUE = 0;
-	private static final int MAX_HUE = 100;
+	private static final int MAX_HUE = 180;
 	private static final int MIN_SATURATION = 0;
-	private static final int MAX_SATURATION = 255;
-	private static final int MIN_VALUE = 220;
+	private static final int MAX_SATURATION = 57;
+	private static final int MIN_VALUE = 243;
 	private static final int MAX_VALUE = 255;
+	
+	private static final String OFFSET_ENTRY = "xoffset";
 
 	private static final double APPROX_EPSILON = 0.1;
 	private final double mRealTargetLength;
 
+	private final NetworkTable mOutputTable;
 	private final CvSource mResultOutput;
 	private final CvProcessing mCvProcessing;
 	private final ImageAnalyser mImageAnalyser;
 	private final double mCamFieldOfViewRadians;
 
-	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
+	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
-		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
+		this(outputTable, resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
 	}
 
-	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
+	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians, double realTargetLength) {
+		mOutputTable = outputTable;
 		mResultOutput = resultOutput;
 		mCvProcessing = cvProcessing;
 		mImageAnalyser = imageAnalyser;
@@ -72,24 +77,49 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			mCvProcessing.filterMatColors(hsvImage, hsvImage, hue, saturation, value);
 			Imgproc.cvtColor(hsvImage, pushImage, Imgproc.COLOR_GRAY2RGB);
 			List<MatOfPoint> countours = mCvProcessing.detectContours(hsvImage);
-			List<RotatedRect> rotatedRects = getRotatedRects(countours);
-			List<RectPair> listRectPair = getPairs(rotatedRects);
-			Collections.sort(listRectPair);
-			RectPair bestPair = listRectPair.get(0);
+			//mCvProcessing.detectContoursByShape(countours, 4, APPROX_EPSILON);
 			
-			Imgproc.circle(pushImage, bestPair.rect1.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
-			Imgproc.circle(pushImage, bestPair.rect2.center, DRAW_CIRCLE_RADIUS - 1, BEST_PAIR_COLOR);
-			System.out.println(String.format("best score - %f", (float) bestPair.score));
-			Imgproc.circle(pushImage,
-					new Point((bestPair.rect2.center.x + bestPair.rect1.center.x) / 2.0,
-							(bestPair.rect2.center.y + bestPair.rect1.center.y) / 2.0),
-					DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
-
+			List<RotatedRect> rotatedRects = getRotatedRects(countours,pushImage);
+			
+			List<RectPair> listRectPair = getPossiblePairs(rotatedRects);
+			if(listRectPair.size() > 0) {
+				Collections.sort(listRectPair);
+				RectPair bestPair = listRectPair.get(0);
+				//System.out.println(bestPair.calcDimensionsScore());
+				drawRotatedRect(pushImage, bestPair.rect1, BEST_PAIR_COLOR);
+				drawRotatedRect(pushImage, bestPair.rect2, BEST_PAIR_COLOR);
+				Point center = new Point((bestPair.rect2.center.x + bestPair.rect1.center.x) / 2.0,
+						(bestPair.rect2.center.y + bestPair.rect1.center.y) / 2.0);
+				System.out.println(String.format("best score - %f", (float) bestPair.score));
+				Imgproc.circle(pushImage,
+						center,
+						DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
+				double xOffSet = center.x - image.width()*0.5;
+				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(xOffSet);
+				//printRectsScores(bestPair);
+				
+			}
+			else {
+				System.out.println("no pair "); 
+				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(-1);
+			}
 			mResultOutput.putFrame(pushImage);
 			
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void printRectsScores(RectPair bestPair) {
+		System.out.println(String.format("Angle score %f", bestPair.calcAngleScore()));
+		System.out.println(String.format("Height score %f", bestPair.calcHeightScore()));
+		System.out.println(String.format("Width score %f", bestPair.calcWidthScore()));
+		System.out.println(String.format("Ypos score %f", bestPair.calcYPosScore()));
+		System.out.println(String.format("centerhiehgt score %f removed", bestPair.calcCenterHeightScore()));
+		System.out.println(String.format("width height 1 %d %d", bestPair.rect1.boundingRect().width ,bestPair.rect1.boundingRect().height));
+		System.out.println(String.format("width height 1 %d %d", bestPair.rect2.boundingRect().width ,bestPair.rect2.boundingRect().height));
+		System.out.println(String.format("angle 1 %f", bestPair.rect1.angle));
+		System.out.println(String.format("angle 2 %f", bestPair.rect2.angle));
 	}
 	
 	private double getDistanceCM(RectPair pair, double imageWidth) {
@@ -97,48 +127,29 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 				mRealTargetLength, mCamFieldOfViewRadians);
 	}
 	
-	private List<RectPair> getBestPairs(List<RectPair> pairs, int numberOfPairs) {
-		List<RectPair> bestPairs = new ArrayList<>();
-		
-		for (int i = 0; i < numberOfPairs; ++i) {
-			RectPair bestPair = null;
-
-			for (RectPair pair : pairs)
-				if (bestPair == null || bestPair.score < pair.score)
-					bestPair = pair;
-
-			pairs.remove(bestPair);
-			bestPairs.add(bestPair);
-		}
-		
-		return bestPairs;
-	}
-	
-	private List<RectPair> getPairs(List<RotatedRect> rects) {
+	private List<RectPair> getPossiblePairs(List<RotatedRect> rects) {
 		List<RectPair> pairs = new ArrayList<RectPair>();
-
-		for (int i = 1; i < rects.size(); ++i)
-			for (int j = 0; j < i; j++) 
-				pairs.add(new RectPair(rects.get(i), rects.get(j)));
-		
+		for (int i = 1; i < rects.size(); i++)
+			for (int j = 0; j < i; j++) {
+				RectPair pair = new RectPair(rects.get(i), rects.get(j));
+				if(pair.rect1.angle < 50.0 && pair.rect2.angle > 130.0)
+					pairs.add(pair);
+			}
 		return pairs;
 	}
 	
-	private List<RotatedRect> getRotatedRects(List<MatOfPoint> contours) {
+	private List<RotatedRect> getRotatedRects(List<MatOfPoint> contours, Mat pushImage) {
 		List<RotatedRect> rects = new ArrayList<RotatedRect>();
-
 		for (MatOfPoint c : contours) {
-
-			MatOfPoint2f cnt2f = new MatOfPoint2f(c.toArray());
-
-			RotatedRect rect = Imgproc.minAreaRect(cnt2f);
-			if (rect.boundingRect().area() > MIN_COUNTOR_SIZE) {
+			if (c.total() > MIN_COUNTOR_SIZE) {
+				MatOfPoint2f cnt2f = new MatOfPoint2f(c.toArray());
+				RotatedRect rect = Imgproc.minAreaRect(cnt2f);
 				if (rect.size.width < rect.size.height)
 					rect.angle += 180;
 				else
 					rect.angle += 90;
-
 				rects.add(rect);
+				
 			}
 		}
 
@@ -154,7 +165,6 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		Point p2 = new Point((int) verticies.get(1, 0)[0], (int) verticies.get(1, 1)[0]);
 		Point p3 = new Point((int) verticies.get(2, 0)[0], (int) verticies.get(2, 1)[0]);
 		Point p4 = new Point((int) verticies.get(3, 0)[0], (int) verticies.get(3, 1)[0]);
-
 		drawBox(image, p1, p2, p3, p4, color);
 	}
 

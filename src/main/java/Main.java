@@ -18,6 +18,7 @@ import edu.wpi.first.Config;
 import edu.wpi.first.ConfigLoader;
 import edu.wpi.first.NtMode;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionThread;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -114,9 +115,12 @@ public final class Main {
         ImageAnalyser imageAnalyser = new ImageAnalyser();
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
         CameraConfig camConfigs = config.getCameraConfigs().get(0);
+        
+        NetworkTable outputTable = NetworkTableInstance.getDefault().getTable("analysis");
+        
         VisionThread visionThread = new VisionThread(
                 cameras.get(0),
-                new ScoreMatchingPipeline(cvSource, cvProcessing, imageAnalyser, camConfigs.getCameraFieldOfViewRadians()),
+                new ScoreMatchingPipeline(outputTable, cvSource, cvProcessing, imageAnalyser, camConfigs.getCameraFieldOfViewRadians()),
                 pipeline -> {
                 });
 
