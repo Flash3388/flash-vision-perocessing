@@ -104,6 +104,8 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			}
 			else {
 				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(0.0);
+
+				mResultOutput.putFrame(image);
 			}
 		} catch (Throwable e) {
 			e.printStackTrace();
