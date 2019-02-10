@@ -1,3 +1,4 @@
+
 /*----------------------------------------------------------------------------*/
 /* Copyright (c) 2018 FIRST. All Rights Reserved.                             */
 /* Open Source Software - may be modified and shared by FRC teams. The code   */
@@ -115,13 +116,11 @@ public final class Main {
         ImageAnalyser imageAnalyser = new ImageAnalyser();
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
         CameraConfig camConfigs = config.getCameraConfigs().get(0);
-        
+
         NetworkTable outputTable = NetworkTableInstance.getDefault().getTable("analysis");
-        
-        VisionThread visionThread = new VisionThread(
-                cameras.get(0),
-                new ScoreMatchingPipeline(outputTable, cvSource, cvProcessing, imageAnalyser, camConfigs.getCameraFieldOfViewRadians()),
-                pipeline -> {
+
+        VisionThread visionThread = new VisionThread(cameras.get(0), new ScoreMatchingPipeline(outputTable, cvSource,
+                cvProcessing, imageAnalyser, camConfigs.getCameraFieldOfViewRadians()), pipeline -> {
                 });
 
         visionThread.start();
