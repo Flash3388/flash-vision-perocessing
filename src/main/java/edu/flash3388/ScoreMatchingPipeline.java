@@ -31,7 +31,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private static final int MAX_HUE = 180;
 	private static final int MIN_SATURATION = 0;
 	private static final int MAX_SATURATION = 57;
-	private static final int MIN_VALUE = 243;
+	private static final int MIN_VALUE = 220;
 	private static final int MAX_VALUE = 255;
 	
 	private static final String OFFSET_ENTRY = "xoffset";
