@@ -1,6 +1,7 @@
 package edu.flash3388;
 
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 
 public class RectPair implements Comparable<RectPair> {
@@ -8,7 +9,6 @@ public class RectPair implements Comparable<RectPair> {
 	public RotatedRect rect2;
 	public MatOfPoint c1;
 	public MatOfPoint c2;
-	
 	public double score;
 
 	public RectPair(RotatedRect rect1, RotatedRect rect2) {
@@ -38,7 +38,7 @@ public class RectPair implements Comparable<RectPair> {
 	}
 	
 	public double calcCenterHeightScore() {
-		return fixScore((rect1.boundingRect().height/centerDistance())/ (14.0/30.0));
+		return fixScore((rect1.boundingRect().height /centerDistance())/ (14.0/30.0));
 		
 	}
 	public double calcDimensionsScore() {
@@ -52,15 +52,7 @@ public class RectPair implements Comparable<RectPair> {
 	}
 	
 	
-	private double getHeight(RotatedRect rect) { // in case that opencv was wrong, height is bigger
-		return Math.max(rect.boundingRect().height, rect.boundingRect().width);
-	}
-	private double getWidth(RotatedRect rect) { // in case that opencv was wrong, height is bigger
-		return Math.min(rect.boundingRect().height, rect.boundingRect().width);
-	}
-	
 	public double calcYPosScore() {
-		//System.out.println(String.format("ypos %f %f", rect1.center.y, rect2.center.y));
 		double div;
 		if (rect1.center.y >= rect2.center.y)
 			div = rect2.center.y / rect1.center.y;
@@ -80,6 +72,11 @@ public class RectPair implements Comparable<RectPair> {
 		if (score > 1.0)
 			score = 1.0 - (score - 1.0);
 		return score;
+	}
+	
+	public Point getCenter() {
+		return new Point((rect2.center.x + rect1.center.x) / 2.0,
+				(rect2.center.y + rect1.center.y) / 2.0);
 	}
 
 	@Override

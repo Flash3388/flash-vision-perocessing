@@ -5,6 +5,8 @@ import edu.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.vision.VisionPipeline;
+
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -12,6 +14,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Range;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -26,6 +29,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private static final double MAX_COUNTOR_SIZE = 200;
 	private static final Scalar DRAW_CIRCLE_COLOR = new Scalar(255, 0, 0);
 	private static final Scalar BEST_PAIR_COLOR = new Scalar(78, 150, 200);
+	private static final Scalar[] BEST_PAIRS_COLOR = new Scalar[] {new Scalar(78, 150, 200), new Scalar(200, 120, 150), new Scalar(150, 23, 87)};
 
 	private static final int MIN_HUE = 0;
 	private static final int MAX_HUE = 180;
@@ -34,7 +38,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private static final int MIN_VALUE = 220;
 	private static final int MAX_VALUE = 255;
 	
-	private static final double MIN_RIGHT_SCORE= 0.85;
+	private static final double MIN_RIGHT_SCORE= 0.9;
 	
 	private static final String OFFSET_ENTRY = "xoffset";
 	private static final String DISTANCE_ENTRY = "distance_vision";
@@ -79,26 +83,28 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			List<RotatedRect> rotatedRects = getRotatedRects(countours); // ~3 ms
 
 			List<RectPair> listRectPair = getPossiblePairs(rotatedRects); // ~1 ms
-			if(listRectPair.size() > 0) {
-				Collections.sort(listRectPair);
-				RectPair bestPair = listRectPair.get(0);
-
+			int amountRects = listRectPair.size();
+			if(amountRects > 0) {
+				Collections.sort(listRectPair);				
                 Mat pushImage = new Mat();
 
                 Imgproc.cvtColor(image, pushImage, Imgproc.COLOR_GRAY2RGB);
 
-				drawRotatedRect(pushImage, bestPair.rect1, BEST_PAIR_COLOR);
-				drawRotatedRect(pushImage, bestPair.rect2, BEST_PAIR_COLOR);
+				for(int i = 0; i < 1 && i < listRectPair.size(); i++){
+					RectPair currPair = listRectPair.get(i);
+					if(currPair.score >= MIN_RIGHT_SCORE) {
+						char ch = (char)(i + 'A');
+						Imgproc.putText(pushImage, String.valueOf(ch), currPair.getCenter(), Core.FONT_HERSHEY_COMPLEX , 1, BEST_PAIRS_COLOR[i]);
+						System.out.println(String.format("score %f char %c ", currPair.score, ch));
 
-				Point center = new Point((bestPair.rect2.center.x + bestPair.rect1.center.x) / 2.0,
-						(bestPair.rect2.center.y + bestPair.rect1.center.y) / 2.0);
+						drawRotatedRect(pushImage, currPair.rect1, BEST_PAIRS_COLOR[i]);
+						drawRotatedRect(pushImage, currPair.rect2, BEST_PAIRS_COLOR[i]);
 
-				System.out.println(String.format("best score - %f", (float) bestPair.score));
+					}
+				}
 
-				Imgproc.circle(pushImage,
-						center,
-						DRAW_CIRCLE_RADIUS, new Scalar(0, 255, 0));
-
+				RectPair bestPair = listRectPair.get(0);
+				Point center = bestPair.getCenter();
 				double xOffSet = center.x - imageWidth * 0.5;
 				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(xOffSet);
 				mOutputTable.getEntry(DISTANCE_ENTRY).setDouble(getDistanceCM(bestPair, image.width()));
@@ -108,7 +114,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			else {
 				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(0.0);
 				mOutputTable.getEntry(DISTANCE_ENTRY).setDouble(-1.0);
-//Alon is a tree
+				
 				mResultOutput.putFrame(image);
 			}
 		} catch (Throwable e) {
