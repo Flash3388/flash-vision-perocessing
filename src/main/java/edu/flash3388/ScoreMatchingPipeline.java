@@ -99,11 +99,13 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 				double xOffSet = center.x - imageWidth * 0.5;
 				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(xOffSet);
+				mOutputTable.getEntry("distance_vision").setDouble(getDistanceCM(bestPair, image.width()));
 
                 mResultOutput.putFrame(pushImage);
 			}
 			else {
 				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(0.0);
+				mOutputTable.getEntry("distance_vision").setDouble(-1.0);
 
 				mResultOutput.putFrame(image);
 			}
