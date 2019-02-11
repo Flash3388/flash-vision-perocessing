@@ -51,6 +51,9 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private final ImageAnalyser mImageAnalyser;
 	private final double mCamFieldOfViewRadians;
 
+	private Range hue;
+	private Range saturation;
+	private Range value;
 	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
 		this(outputTable, resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
@@ -64,6 +67,10 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		mImageAnalyser = imageAnalyser;
 		mCamFieldOfViewRadians = camFieldOfViewRadians;
 		mRealTargetLength = realTargetLength;
+
+		hue = new Range(MIN_HUE, MAX_HUE);
+		saturation = new Range(MIN_SATURATION, MAX_SATURATION);
+		value = new Range(MIN_VALUE, MAX_VALUE);
 	}
 
 	@Override
@@ -73,10 +80,6 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 			mCvProcessing.rgbToHsv(image, image); // ~15 ms
 
-			Range hue = new Range(MIN_HUE, MAX_HUE);
-			Range saturation = new Range(MIN_SATURATION, MAX_SATURATION);
-			Range value = new Range(MIN_VALUE, MAX_VALUE);
-
 			mCvProcessing.filterMatColors(image, image, hue, saturation, value); // ~15 ms
 			List<MatOfPoint> countours = mCvProcessing.detectContours(image); // ~10 ms
 			
@@ -84,6 +87,9 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 			List<RectPair> listRectPair = getPossiblePairs(rotatedRects); // ~1 ms
 			int amountRects = listRectPair.size();
+			
+			double xOffSet = 0.0;
+			double distance = -1;
 			if(amountRects > 0) {
 				Collections.sort(listRectPair);				
                 Mat pushImage = new Mat();
@@ -105,18 +111,19 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 				RectPair bestPair = listRectPair.get(0);
 				Point center = bestPair.getCenter();
-				double xOffSet = center.x - imageWidth * 0.5;
-				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(xOffSet);
-				mOutputTable.getEntry(DISTANCE_ENTRY).setDouble(getDistanceCM(bestPair, image.width()));
+				xOffSet = center.x - imageWidth * 0.5;
+				distance = getDistanceCM(bestPair, image.width());
 
                 mResultOutput.putFrame(pushImage);
 			}
 			else {
-				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(0.0);
-				mOutputTable.getEntry(DISTANCE_ENTRY).setDouble(-1.0);
-				
 				mResultOutput.putFrame(image);
 			}
+			mOutputTable.getEntry(OFFSET_ENTRY).setDouble(xOffSet);
+			mOutputTable.getEntry(DISTANCE_ENTRY).setDouble(distance);
+
+			
+			
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}

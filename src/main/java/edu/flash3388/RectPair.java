@@ -44,7 +44,7 @@ public class RectPair implements Comparable<RectPair> {
 	public double calcDimensionsScore() {
 		return 1.0;
 	}
-	public double calcHeightScore() {
+	public double calcHeightScore() { // for the missunderstand: opnecv catches the right rect's height as width
 		return fixScore((double)rect1.boundingRect().height / rect2.boundingRect().width);
 	}
 	public double calcWidthScore() {
