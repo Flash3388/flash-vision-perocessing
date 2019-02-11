@@ -106,7 +106,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			else {
 				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(0.0);
 				mOutputTable.getEntry("distance_vision").setDouble(-1.0);
-
+//Alon is a tree
 				mResultOutput.putFrame(image);
 			}
 		} catch (Throwable e) {
