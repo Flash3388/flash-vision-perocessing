@@ -1,5 +1,8 @@
 package edu.flash3388;
 
+import edu.tables.TargetData;
+import edu.tables.TargetSelect;
+import edu.tables.TargetSelectListener;
 import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
@@ -22,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class ScoreMatchingPipeline implements VisionPipeline {
+public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListener  {
 
 	private static final int DRAW_CIRCLE_RADIUS = 5;
 	private static final double MIN_COUNTOR_SIZE = 20;
@@ -54,9 +57,16 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private Range hue;
 	private Range saturation;
 	private Range value;
+
+	private TargetData mTargetData;
+	private TargetSelect mTargetSelect;
+
 	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
 		this(outputTable, resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
+		mTargetData = new TargetData();
+		mTargetSelect = new TargetSelect();
+		mTargetSelect.registerSelectTargetListener(this);
 	}
 
 	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
@@ -119,11 +129,13 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			else {
 				mResultOutput.putFrame(image);
 			}
+
+			mTargetData.setVisionDistance(distance);
+			mTargetData.setXOffset(xOffSet);
+
 			mOutputTable.getEntry(OFFSET_ENTRY).setDouble(xOffSet);
 			mOutputTable.getEntry(DISTANCE_ENTRY).setDouble(distance);
 
-			
-			
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
@@ -202,6 +214,13 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		System.out.println(String.format("width height 1 %d %d", bestPair.rect2.boundingRect().width ,bestPair.rect2.boundingRect().height));
 		System.out.println(String.format("angle 1 %f", bestPair.rect1.angle));
 		System.out.println(String.format("angle 2 %f", bestPair.rect2.angle));
+	}
+
+	public void onTargetSelectPressed(int targetNumber) {
+
+	}
+
+    public void OnNextTargetSelectPressed() {
 	}
 	
 }
