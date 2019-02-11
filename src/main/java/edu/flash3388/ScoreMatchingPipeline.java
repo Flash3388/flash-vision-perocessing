@@ -34,9 +34,11 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private static final int MIN_VALUE = 220;
 	private static final int MAX_VALUE = 255;
 	
+	private static final double MIN_RIGHT_SCORE= 0.85;
+	
 	private static final String OFFSET_ENTRY = "xoffset";
+	private static final String DISTANCE_ENTRY = "distance_vision";
 
-	private static final double APPROX_EPSILON = 0.1;
 	private final double mRealTargetLength;
 
 	private final NetworkTable mOutputTable;
@@ -99,13 +101,13 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 				double xOffSet = center.x - imageWidth * 0.5;
 				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(xOffSet);
-				mOutputTable.getEntry("distance_vision").setDouble(getDistanceCM(bestPair, image.width()));
+				mOutputTable.getEntry(DISTANCE_ENTRY).setDouble(getDistanceCM(bestPair, image.width()));
 
                 mResultOutput.putFrame(pushImage);
 			}
 			else {
 				mOutputTable.getEntry(OFFSET_ENTRY).setDouble(0.0);
-				mOutputTable.getEntry("distance_vision").setDouble(-1.0);
+				mOutputTable.getEntry(DISTANCE_ENTRY).setDouble(-1.0);
 //Alon is a tree
 				mResultOutput.putFrame(image);
 			}
@@ -114,18 +116,6 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		}
 	}
 
-	private void printRectsScores(RectPair bestPair) {
-		System.out.println(String.format("Angle score %f", bestPair.calcAngleScore()));
-		System.out.println(String.format("Height score %f", bestPair.calcHeightScore()));
-		System.out.println(String.format("Width score %f", bestPair.calcWidthScore()));
-		System.out.println(String.format("Ypos score %f", bestPair.calcYPosScore()));
-		System.out.println(String.format("centerhiehgt score %f removed", bestPair.calcCenterHeightScore()));
-		System.out.println(String.format("width height 1 %d %d", bestPair.rect1.boundingRect().width ,bestPair.rect1.boundingRect().height));
-		System.out.println(String.format("width height 1 %d %d", bestPair.rect2.boundingRect().width ,bestPair.rect2.boundingRect().height));
-		System.out.println(String.format("angle 1 %f", bestPair.rect1.angle));
-		System.out.println(String.format("angle 2 %f", bestPair.rect2.angle));
-	}
-	
 	private double getDistanceCM(RectPair pair, double imageWidth) {
 		return mImageAnalyser.measureDistance(imageWidth, pair.centerDistance(),
 				mRealTargetLength, mCamFieldOfViewRadians);
@@ -169,6 +159,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
         return rects;
 	}
 
+	
 	private void drawRotatedRect(Mat image, RotatedRect rect, Scalar color) {
 		MatOfPoint verticies = new MatOfPoint();
 
@@ -188,4 +179,16 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		Imgproc.line(image, p4, p1, color, 2);
 
 	}
+	private void printRectsScores(RectPair bestPair) {
+		System.out.println(String.format("Angle score %f", bestPair.calcAngleScore()));
+		System.out.println(String.format("Height score %f", bestPair.calcHeightScore()));
+		System.out.println(String.format("Width score %f", bestPair.calcWidthScore()));
+		System.out.println(String.format("Ypos score %f", bestPair.calcYPosScore()));
+		System.out.println(String.format("centerhiehgt score %f removed", bestPair.calcCenterHeightScore()));
+		System.out.println(String.format("width height 1 %d %d", bestPair.rect1.boundingRect().width ,bestPair.rect1.boundingRect().height));
+		System.out.println(String.format("width height 1 %d %d", bestPair.rect2.boundingRect().width ,bestPair.rect2.boundingRect().height));
+		System.out.println(String.format("angle 1 %f", bestPair.rect1.angle));
+		System.out.println(String.format("angle 2 %f", bestPair.rect2.angle));
+	}
+	
 }
