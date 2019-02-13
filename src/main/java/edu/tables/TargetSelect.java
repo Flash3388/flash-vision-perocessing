@@ -37,10 +37,7 @@ public class TargetSelect implements TableEntryListener {
 
         if (targetSelectListener != null) {
             mSelectNextTargetEntryListenerHandle = mTargetSelectTable.addEntryListener(SELECT_NEXT_TARGET_KEY, this, EntryListenerFlags.kUpdate);
-
-            for (int i = 0 ; i < NUM_OF_POSSIBLE_TARGETS ; i++) {
-                mSelectTargetNumberListenerHandle = mTargetSelectTable.addEntryListener(SELECT_TARGET_NUMBER_KEY, this, EntryListenerFlags.kUpdate);
-            }
+            mSelectTargetNumberListenerHandle = mTargetSelectTable.addEntryListener(SELECT_TARGET_NUMBER_KEY, this, EntryListenerFlags.kUpdate);
         }
     }
 

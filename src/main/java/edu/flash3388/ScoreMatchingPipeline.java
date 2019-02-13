@@ -1,6 +1,7 @@
 package edu.flash3388;
 
 import edu.tables.TargetData;
+import edu.tables.TargetDataTable;
 import edu.tables.TargetSelect;
 import edu.tables.TargetSelectListener;
 import edu.flash3388.vision.ImageAnalyser;
@@ -58,15 +59,17 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	private Range saturation;
 	private Range value;
 
-	private TargetData mTargetData;
+	private TargetDataTable mTargetDataTable;
 	private TargetSelect mTargetSelect;
+	private int mTargetSelectNum;
 
 	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
 		this(outputTable, resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
-		mTargetData = new TargetData();
+		mTargetDataTable = new TargetDataTable();
 		mTargetSelect = new TargetSelect();
 		mTargetSelect.registerSelectTargetListener(this);
+		mTargetSelectNum = 0;
 	}
 
 	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
@@ -124,14 +127,17 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 				xOffSet = center.x - imageWidth * 0.5;
 				distance = getDistanceCM(bestPair, image.width());
 
+				// New
+				if (mTargetSelectNum < listRectPair.size()) {
+					sendTargetData(listRectPair.get(mTargetSelectNum), imageWidth);
+				}
+				//
+				
                 mResultOutput.putFrame(pushImage);
 			}
 			else {
 				mResultOutput.putFrame(image);
 			}
-
-			mTargetData.setVisionDistance(distance);
-			mTargetData.setXOffset(xOffSet);
 
 			mOutputTable.getEntry(OFFSET_ENTRY).setDouble(xOffSet);
 			mOutputTable.getEntry(DISTANCE_ENTRY).setDouble(distance);
@@ -217,10 +223,16 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	}
 
 	public void onTargetSelectPressed(int targetNumber) {
-
+		mTargetSelectNum = targetNumber;
 	}
 
     public void OnNextTargetSelectPressed() {
 	}
 	
+	private void sendTargetData(RectPair rectPair, double imageWidth) {
+		Point center = rectPair.getCenter();
+		double xOffset = center.x - imageWidth * 0.5;
+		double distance = getDistanceCM(rectPair, imageWidth);
+		mTargetDataTable.setTargetData(new TargetData(xOffset, distance));
+	}
 }
