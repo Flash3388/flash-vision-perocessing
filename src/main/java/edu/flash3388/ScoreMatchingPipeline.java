@@ -69,7 +69,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 		mTargetDataTable = new TargetDataTable();
 		mTargetSelectTable = new TargetSelectTable();
 		mTargetSelectTable.registerSelectTargetListener(this);
-		mTargetSelectNum = 0;
+		mTargetSelectNum = TargetSelectTable.NUM_OF_POSSIBLE_TARGETS + 1; // invalid value
 	}
 
 	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
@@ -127,11 +127,10 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 				xOffSet = center.x - imageWidth * 0.5;
 				distance = getDistanceCM(bestPair, image.width());
 
-				// New
 				if (mTargetSelectNum < listRectPair.size()) {
 					sendTargetData(listRectPair.get(mTargetSelectNum), imageWidth);
+					mTargetSelectNum = TargetSelectTable.NUM_OF_POSSIBLE_TARGETS + 1;
 				}
-				//
 				
                 mResultOutput.putFrame(pushImage);
 			}
