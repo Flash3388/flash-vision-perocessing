@@ -2,7 +2,7 @@ package edu.flash3388;
 
 import edu.tables.TargetData;
 import edu.tables.TargetDataTable;
-import edu.tables.TargetSelect;
+import edu.tables.TargetSelectTable;
 import edu.tables.TargetSelectListener;
 import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
@@ -60,15 +60,15 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	private Range value;
 
 	private TargetDataTable mTargetDataTable;
-	private TargetSelect mTargetSelect;
+	private TargetSelectTable mTargetSelectTable;
 	private int mTargetSelectNum;
 
 	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
 		this(outputTable, resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
 		mTargetDataTable = new TargetDataTable();
-		mTargetSelect = new TargetSelect();
-		mTargetSelect.registerSelectTargetListener(this);
+		mTargetSelectTable = new TargetSelectTable();
+		mTargetSelectTable.registerSelectTargetListener(this);
 		mTargetSelectNum = 0;
 	}
 
