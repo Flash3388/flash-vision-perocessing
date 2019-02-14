@@ -62,6 +62,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	private TargetDataTable mTargetDataTable;
 	private TargetSelectTable mTargetSelectTable;
 	private int mTargetSelectNum;
+	private Boolean mSendTargetData;
 
 	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
@@ -69,7 +70,8 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 		mTargetDataTable = new TargetDataTable();
 		mTargetSelectTable = new TargetSelectTable();
 		mTargetSelectTable.registerSelectTargetListener(this);
-		mTargetSelectNum = TargetSelectTable.NUM_OF_POSSIBLE_TARGETS + 1; // invalid value
+		mTargetSelectNum = 0;
+		mSendTargetData = false;
 	}
 
 	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
@@ -127,7 +129,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 				xOffSet = center.x - imageWidth * 0.5;
 				distance = getDistanceCM(bestPair, image.width());
 
-				if (mTargetSelectNum < listRectPair.size()) {
+				if (mSendTargetData && mTargetSelectNum < listRectPair.size()) {
 					sendTargetData(listRectPair.get(mTargetSelectNum), imageWidth);
 					mTargetSelectNum = TargetSelectTable.NUM_OF_POSSIBLE_TARGETS + 1;
 				}
@@ -223,6 +225,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 
 	public void onTargetSelectPressed(int targetNumber) {
 		mTargetSelectNum = targetNumber;
+		mSendTargetData = true;
 	}
 
     public void OnNextTargetSelectPressed() {
@@ -233,5 +236,6 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 		double xOffset = center.x - imageWidth * 0.5;
 		double distance = getDistanceCM(rectPair, imageWidth);
 		mTargetDataTable.setTargetData(new TargetData(xOffset, distance));
+		mSendTargetData = false;
 	}
 }
