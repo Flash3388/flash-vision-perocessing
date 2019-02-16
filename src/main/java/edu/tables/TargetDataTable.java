@@ -11,6 +11,7 @@ public class TargetDataTable implements TableEntryListener {
     private final static String TARGET_DATA_TABLE = "target_data_table";
     private final static String X_OFFSET_KEY = "x_offset_key";
     private final static String VISION_DISTANCE_KEY = "vision_distance_key";
+    private final static String ANGLE_IN_RADIANS_KEY = "angle_in_radians_key";
     private final static String DONE_KEY = "done_key";
     public final double DONE=1.0;
 
@@ -25,6 +26,7 @@ public class TargetDataTable implements TableEntryListener {
     public void setTargetData(TargetData targetData) {
         setXOffset(targetData.getXOffset());
         setVisionDistance(targetData.getDistance());
+        setTargetAngleInRadians(targetData.getAngleInRadians());
         mTargetDataTable.getEntry(DONE_KEY).setDouble(DONE);
     }
 
@@ -44,6 +46,14 @@ public class TargetDataTable implements TableEntryListener {
         return mTargetDataTable.getEntry(VISION_DISTANCE_KEY).getDouble(defaultValue);
     }
    
+    public void setTargetAngleInRadians(double angleInRadians) {
+        mTargetDataTable.getEntry(ANGLE_IN_RADIANS_KEY).setDouble(angleInRadians);
+    }
+
+    public double getTargetAngleInRadians(double defaultValue) {
+        return mTargetDataTable.getEntry(ANGLE_IN_RADIANS_KEY).getDouble(defaultValue);
+    }
+
     public void registerTargetDataListener(TargetDataListener targetDataListener) {
         mTargetDataListener = targetDataListener;
 
@@ -64,7 +74,7 @@ public class TargetDataTable implements TableEntryListener {
                       NetworkTableValue value,
                       int flags) {
         if (key.equals(DONE_KEY)) {
-            TargetData targetData = new TargetData(getXOffset(0), getVisionDistance(0));
+            TargetData targetData = new TargetData(getXOffset(0), getVisionDistance(0), getTargetAngleInRadians(0));
             mTargetDataListener.onTargetData(targetData);
         }
     }

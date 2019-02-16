@@ -130,7 +130,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 				distance = getDistanceCM(bestPair, image.width());
 
 				if (mSendTargetData && mTargetSelectNum < listRectPair.size()) {
-					sendTargetData(listRectPair.get(mTargetSelectNum), imageWidth);
+					sendTargetData(image, listRectPair.get(mTargetSelectNum), imageWidth);
 					mTargetSelectNum = TargetSelectTable.NUM_OF_POSSIBLE_TARGETS + 1;
 				}
 				
@@ -152,7 +152,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 		return mImageAnalyser.measureDistance(imageWidth, pair.centerDistance(),
 				mRealTargetLength, mCamFieldOfViewRadians);
 	}
-	
+
 	private List<RectPair> getPossiblePairs(List<RotatedRect> rects) {
 		List<RectPair> pairs = new ArrayList<>();
         IntStream.range(0, rects.size())
@@ -231,11 +231,12 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
     public void OnNextTargetSelectPressed() {
 	}
 	
-	private void sendTargetData(RectPair rectPair, double imageWidth) {
+	private void sendTargetData(Mat image, RectPair rectPair, double imageWidth) {
 		Point center = rectPair.getCenter();
 		double xOffset = center.x - imageWidth * 0.5;
 		double distance = getDistanceCM(rectPair, imageWidth);
-		mTargetDataTable.setTargetData(new TargetData(xOffset, distance));
+		double angleInRadians = mImageAnalyser.calculateHorizontalOffsetDegrees(image, center, mCamFieldOfViewRadians);
+		mTargetDataTable.setTargetData(new TargetData(xOffset, distance, angleInRadians));
 		mSendTargetData = false;
 	}
 }
