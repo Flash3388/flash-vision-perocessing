@@ -3,12 +3,12 @@ package edu.tables;
 public class TargetData {
     private Double mXOffset;
     private Double mDistance;
-    private Double mAngleInRadians;
+    private Double mAngleInDegrees;
 
-    public TargetData(Double xOffset, Double distance, Double angleInRadians) {
+    public TargetData(Double xOffset, Double distance, Double angleInDegrees) {
         mXOffset = xOffset;
         mDistance = distance;
-        mAngleInRadians = angleInRadians;
+        mAngleInDegrees = angleInDegrees;
     }
 
     Double getXOffset() {
@@ -19,7 +19,7 @@ public class TargetData {
         return mDistance;
     }
 
-    Double getAngleInRadians() {
-        return mAngleInRadians;
+    Double getAngleInDegrees() {
+        return mAngleInDegrees;
     }
 }
