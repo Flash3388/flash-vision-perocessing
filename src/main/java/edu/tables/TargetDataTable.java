@@ -9,7 +9,6 @@ import edu.wpi.first.networktables.TableEntryListener;
 
 public class TargetDataTable implements TableEntryListener {
     private final static String TARGET_DATA_TABLE = "target_data_table";
-    private final static String X_OFFSET_KEY = "x_offset_key";
     private final static String VISION_DISTANCE_KEY = "vision_distance_key";
     private final static String ANGLE_IN_DEGREES_KEY = "angle_in_degrees_key";
     private final static String DONE_KEY = "done_key";
@@ -24,18 +23,9 @@ public class TargetDataTable implements TableEntryListener {
     }
 
     public void setTargetData(TargetData targetData) {
-        setXOffset(targetData.getXOffset());
         setVisionDistance(targetData.getDistance());
         setTargetAngleInDegrees(targetData.getAngleInDegrees());
         mTargetDataTable.getEntry(DONE_KEY).setDouble(DONE);
-    }
-
-    public void setXOffset(double xOffset) {
-        mTargetDataTable.getEntry(X_OFFSET_KEY).setDouble(xOffset);
-    }
-
-    public double getXOffset(double defaultValue) {
-        return mTargetDataTable.getEntry(VISION_DISTANCE_KEY).getDouble(defaultValue);
     }
 
     public void setVisionDistance(double visionDistance) {
@@ -74,7 +64,7 @@ public class TargetDataTable implements TableEntryListener {
                       NetworkTableValue value,
                       int flags) {
         if (key.equals(DONE_KEY)) {
-            TargetData targetData = new TargetData(getXOffset(0), getVisionDistance(0), getTargetAngleInDegrees(0));
+            TargetData targetData = new TargetData(getVisionDistance(0), getTargetAngleInDegrees(0));
             mTargetDataListener.onTargetData(targetData);
         }
     }

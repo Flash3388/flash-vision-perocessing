@@ -233,10 +233,9 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	
 	private void sendTargetData(Mat image, RectPair rectPair, double imageWidth) {
 		Point center = rectPair.getCenter();
-		double xOffset = center.x - imageWidth * 0.5;
 		double distance = getDistanceCM(rectPair, imageWidth);
-		double angleInRadians = mImageAnalyser.calculateHorizontalOffsetDegrees(image, center, mCamFieldOfViewRadians);
-		mTargetDataTable.setTargetData(new TargetData(xOffset, distance, angleInRadians));
+		double angleInDegress = Math.toDegrees(mImageAnalyser.calculateHorizontalOffsetDegrees(image, center, mCamFieldOfViewRadians));
+		mTargetDataTable.setTargetData(new TargetData(distance, angleInDegress));
 		mSendTargetData = false;
 	}
 }
