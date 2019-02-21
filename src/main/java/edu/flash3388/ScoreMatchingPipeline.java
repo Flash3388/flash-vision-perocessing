@@ -1,9 +1,9 @@
 package edu.flash3388;
 
-import edu.tables.TargetData;
-import edu.tables.TargetDataTable;
-import edu.tables.TargetSelectTable;
-import edu.tables.TargetSelectListener;
+import frc.tables.TargetData;
+import frc.tables.TargetDataTable;
+import frc.tables.TargetSelectTable;
+import frc.tables.TargetSelectListener;
 import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
@@ -88,12 +88,9 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
             double imageWidth = image.width();
 
 			mCvProcessing.rgbToHsv(image, image); // ~15 ms
-
 			mCvProcessing.filterMatColors(image, image, hue, saturation, value); // ~15 ms
 			List<MatOfPoint> countours = mCvProcessing.detectContours(image); // ~10 ms
-			
 			List<RotatedRect> rotatedRects = getRotatedRects(countours); // ~3 ms
-
 			List<RectPair> listRectPair = getPossiblePairs(rotatedRects); // ~1 ms
 			int amountRects = listRectPair.size();
 			
@@ -114,7 +111,6 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 
 						drawRotatedRect(pushImage, currPair.rect1, BEST_PAIRS_COLOR[i]);
 						drawRotatedRect(pushImage, currPair.rect2, BEST_PAIRS_COLOR[i]);
-
 					}
 				}
 
@@ -153,7 +149,6 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
                                 pairs.add(pair);
                             }
                         }));
-
 		return pairs;
 	}
 	
@@ -176,7 +171,6 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 
             rects.add(rect);
         });
-
 
         return rects;
 	}

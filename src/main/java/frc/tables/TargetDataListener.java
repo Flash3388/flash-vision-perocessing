@@ -1,4 +1,4 @@
-package edu.tables;
+package frc.tables;
 
 public interface TargetDataListener {
     void onTargetData(TargetData targetData);

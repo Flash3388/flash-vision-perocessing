@@ -1,4 +1,4 @@
-package edu.tables;
+package frc.tables;
 
 public class TargetData {
     private double mDistance;

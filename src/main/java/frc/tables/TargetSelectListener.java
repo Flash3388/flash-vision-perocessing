@@ -1,4 +1,4 @@
-package edu.tables;
+package frc.tables;
 
 public interface TargetSelectListener {
     void onTargetSelectPressed(int targetNumber);

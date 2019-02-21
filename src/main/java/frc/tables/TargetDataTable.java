@@ -1,4 +1,4 @@
-package edu.tables;
+package frc.tables;
 
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
