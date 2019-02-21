@@ -41,15 +41,10 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	private static final int MAX_SATURATION = 57;
 	private static final int MIN_VALUE = 220;
 	private static final int MAX_VALUE = 255;
-	
 	private static final double MIN_RIGHT_SCORE= 0.9;
-	
-	private static final String OFFSET_ENTRY = "xoffset";
-	private static final String DISTANCE_ENTRY = "distance_vision";
 
 	private final double mRealTargetLength;
 
-	private final NetworkTable mOutputTable;
 	private final CvSource mResultOutput;
 	private final CvProcessing mCvProcessing;
 	private final ImageAnalyser mImageAnalyser;
@@ -64,9 +59,9 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	private int mTargetSelectNum;
 	private Boolean mSendTargetData;
 
-	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
+	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
-		this(outputTable, resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
+		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
 		mTargetDataTable = new TargetDataTable();
 		mTargetSelectTable = new TargetSelectTable();
 		mTargetSelectTable.registerSelectTargetListener(this);
@@ -74,9 +69,8 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 		mSendTargetData = false;
 	}
 
-	public ScoreMatchingPipeline(NetworkTable outputTable, CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
+	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians, double realTargetLength) {
-		mOutputTable = outputTable;
 		mResultOutput = resultOutput;
 		mCvProcessing = cvProcessing;
 		mImageAnalyser = imageAnalyser;
@@ -139,10 +133,6 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 			else {
 				mResultOutput.putFrame(image);
 			}
-
-			mOutputTable.getEntry(OFFSET_ENTRY).setDouble(xOffSet);
-			mOutputTable.getEntry(DISTANCE_ENTRY).setDouble(distance);
-
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
