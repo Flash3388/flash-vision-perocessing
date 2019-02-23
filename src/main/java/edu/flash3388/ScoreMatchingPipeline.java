@@ -4,10 +4,11 @@ import frc.tables.TargetData;
 import frc.tables.TargetDataTable;
 import frc.tables.TargetSelectTable;
 import frc.tables.TargetSelectListener;
+
 import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
+
 import edu.wpi.cscore.CvSource;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.vision.VisionPipeline;
 
 import org.opencv.core.Core;
@@ -18,7 +19,6 @@ import org.opencv.core.Point;
 import org.opencv.core.Range;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -29,7 +29,9 @@ import java.util.stream.IntStream;
 public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListener  {
 
 	private static final int DRAW_CIRCLE_RADIUS = 5;
-	private static final double MIN_COUNTOR_SIZE = 20;
+	private static final double DISTANCE_BETWEEN_CENTERS_CM = 28.0;
+	private static final double DISTANCE_BETWEEN_CENTERS_CM_REVERSED = 1/28.0;
+	private static final double MIN_COUNTOR_SIZE = 25;
 	private static final double MAX_COUNTOR_SIZE = 200;
 	private static final Scalar DRAW_CIRCLE_COLOR = new Scalar(255, 0, 0);
 	private static final Scalar BEST_PAIR_COLOR = new Scalar(78, 150, 200);
@@ -61,7 +63,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
-		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, 30);
+		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, DISTANCE_BETWEEN_CENTERS_CM);
 		mTargetDataTable = new TargetDataTable();
 		mTargetSelectTable = new TargetSelectTable();
 		mTargetSelectTable.registerSelectTargetListener(this);
@@ -85,7 +87,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	@Override
 	public void process(Mat image) {
 		try {
-            double imageWidth = image.width();
+			double imageWidth = image.width();
 
 			mCvProcessing.rgbToHsv(image, image); // ~15 ms
 			mCvProcessing.filterMatColors(image, image, hue, saturation, value); // ~15 ms
@@ -93,20 +95,21 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 			List<RotatedRect> rotatedRects = getRotatedRects(countours); // ~3 ms
 			List<RectPair> listRectPair = getPossiblePairs(rotatedRects); // ~1 ms
 			int amountRects = listRectPair.size();
-			
+
 			double xOffSet = 0.0;
 			double distance = -1;
-			if(amountRects > 0) {
-				Collections.sort(listRectPair);				
-                Mat pushImage = new Mat();
+			if (amountRects > 0) {
+				Collections.sort(listRectPair);
+				Mat pushImage = new Mat();
 
-                Imgproc.cvtColor(image, pushImage, Imgproc.COLOR_GRAY2RGB);
+				Imgproc.cvtColor(image, pushImage, Imgproc.COLOR_GRAY2RGB);
 
-				for(int i = 0; i < 1 && i < listRectPair.size(); i++){
+				for (int i = 0; i < 1 && i < listRectPair.size(); i++) {
 					RectPair currPair = listRectPair.get(i);
-					if(currPair.score >= MIN_RIGHT_SCORE) {
-						char ch = (char)(i + 'A');
-						Imgproc.putText(pushImage, String.valueOf(ch), currPair.getCenter(), Core.FONT_HERSHEY_COMPLEX , 1, BEST_PAIRS_COLOR[i]);
+					if (currPair.score >= MIN_RIGHT_SCORE) {
+						char ch = (char) (i + 'A');
+						Imgproc.putText(pushImage, String.valueOf(ch), currPair.getCenter(), Core.FONT_HERSHEY_COMPLEX,
+								1, BEST_PAIRS_COLOR[i]);
 						System.out.println(String.format("score %f char %c ", currPair.score, ch));
 
 						drawRotatedRect(pushImage, currPair.rect1, BEST_PAIRS_COLOR[i]);
@@ -114,24 +117,23 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 					}
 				}
 
-				RectPair bestPair = listRectPair.get(0);
-				Point center = bestPair.getCenter();
-				xOffSet = center.x - imageWidth * 0.5;
-				distance = getDistanceCM(bestPair, image.width());
-
 				if (mSendTargetData && mTargetSelectNum < listRectPair.size()) {
 					sendTargetData(image, listRectPair.get(mTargetSelectNum), imageWidth);
-					mTargetSelectNum = TargetSelectTable.NUM_OF_POSSIBLE_TARGETS + 1;
 				}
-				
-                mResultOutput.putFrame(pushImage);
-			}
-			else {
+
+				mResultOutput.putFrame(pushImage);
+			} else {
 				mResultOutput.putFrame(image);
 			}
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private double getAngleDegrees(RectPair pair, double xoffset, double distance) {
+		double ratio = pair.centerDistance() * DISTANCE_BETWEEN_CENTERS_CM_REVERSED;
+		double angle = Math.toDegrees(Math.asin(Math.abs(xoffset / ratio) / distance));
+		return angle * Math.signum(xoffset);
 	}
 
 	private double getDistanceCM(RectPair pair, double imageWidth) {
@@ -212,13 +214,16 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 		mSendTargetData = true;
 	}
 
-    public void OnNextTargetSelectPressed() {
+	public void OnNextTargetSelectPressed() {
+		mSendTargetData = true;
+		System.out.println("Called ");
 	}
 	
 	private void sendTargetData(Mat image, RectPair rectPair, double imageWidth) {
+		System.out.println("Send ");
 		Point center = rectPair.getCenter();
 		double distance = getDistanceCM(rectPair, imageWidth);
-		double angleInDegress = Math.toDegrees(mImageAnalyser.calculateHorizontalOffsetDegrees(image, center, mCamFieldOfViewRadians));
+		double angleInDegress = getAngleDegrees(rectPair, center.x - imageWidth * 0.5, distance);
 		mTargetDataTable.setTargetData(new TargetData(distance, angleInDegress));
 		mSendTargetData = false;
 	}

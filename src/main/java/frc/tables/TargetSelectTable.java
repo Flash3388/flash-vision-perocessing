@@ -52,8 +52,9 @@ public class TargetSelectTable implements TableEntryListener {
                       java.lang.String key,
                       NetworkTableEntry entry,
                       NetworkTableValue value,
-                      int flags) {
-        if (key.equals(SELECT_NEXT_TARGET_KEY)) {
+            int flags) {
+        if (key.equals(SELECT_NEXT_TARGET_KEY) && value.getBoolean()) {
+            entry.setBoolean(false);
             mTargetSelectListener.OnNextTargetSelectPressed();
         } else if (key.equals(SELECT_TARGET_NUMBER_KEY)) {
             mTargetSelectListener.onTargetSelectPressed((int)value.getDouble());

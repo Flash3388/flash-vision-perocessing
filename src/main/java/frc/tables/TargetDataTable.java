@@ -23,6 +23,7 @@ public class TargetDataTable implements TableEntryListener {
     }
 
     public void setTargetData(TargetData targetData) {
+        mTargetDataTable.getEntry(DONE_KEY).setDouble(0.0);
         setVisionDistance(targetData.getDistance());
         setTargetAngleInDegrees(targetData.getAngleInDegrees());
         mTargetDataTable.getEntry(DONE_KEY).setDouble(DONE);
