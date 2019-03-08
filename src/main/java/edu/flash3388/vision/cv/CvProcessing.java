@@ -89,7 +89,6 @@ public class CvProcessing {
             matOfPoint2f.fromList(contour.toList());
             Imgproc.approxPolyDP(matOfPoint2f, approxCurve, Imgproc.arcLength(matOfPoint2f, true) * accuracy, true);
             long total = approxCurve.total();
-
             if (total != vertices) {
                 contours.remove(idx);
             }
