@@ -49,7 +49,15 @@ public class ConfigLoader {
         File visionTemplate = parseVisionTemplate(rootObject);
         double templateMatchingScaleFactor = parseTemplateMatchingScaleFactor(rootObject);
 
-        return new Config(teamNumber, ntMode, cameraConfigs, templateMatchingMethod, visionTemplate, templateMatchingScaleFactor);
+        int minRed = parseFilterVal(rootObject, "minRed");
+        int maxRed = parseFilterVal(rootObject, "maxRed");;
+        int minGreen = parseFilterVal(rootObject, "minGreen");;
+        int maxGreen = parseFilterVal(rootObject, "maxGreen");;
+        int minBlue = parseFilterVal(rootObject, "minBlue");;
+        int maxBlue = parseFilterVal(rootObject, "maxBlue");;
+
+        return new Config(teamNumber, ntMode, cameraConfigs, templateMatchingMethod, visionTemplate, templateMatchingScaleFactor,
+                minRed, maxRed, minGreen, maxGreen, minBlue, maxBlue);
     }
 
     private int parseTeamNumber(JsonObject rootObject) throws ConfigLoadException {
@@ -168,5 +176,16 @@ public class ConfigLoader {
         } catch (ClassCastException e) {
             throw new ConfigLoadException("`templateMatchingScaleFactor` element is not a double");
         }
+    }
+
+    private int parseFilterVal(JsonObject rootObject, String val) throws ConfigLoadException {
+        try {
+            if (!rootObject.has(val))
+                throw new ConfigLoadException("missing "+val);
+            
+            return rootObject.get(val).getAsInt();
+        } catch (ClassCastException e) {
+            throw new ConfigLoadException(val+" element is not an integer");
+        } 
     }
 }
