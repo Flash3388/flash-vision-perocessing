@@ -9,9 +9,10 @@ import edu.flash3388.vision.ImageAnalyser;
 import edu.flash3388.vision.cv.CvProcessing;
 
 import edu.wpi.cscore.CvSource;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionPipeline;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -31,17 +32,19 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	private static final int DRAW_CIRCLE_RADIUS = 5;
 	private static final double DISTANCE_BETWEEN_CENTERS_CM = 28.0;
 	private static final double DISTANCE_BETWEEN_CENTERS_CM_REVERSED = 1/28.0;
-	private static final double MIN_COUNTOR_SIZE = 25;
+	private static final double MIN_COUNTOR_SIZE = 10;
 	private static final double MAX_COUNTOR_SIZE = 200;
 	private static final Scalar DRAW_CIRCLE_COLOR = new Scalar(255, 0, 0);
 	private static final Scalar BEST_PAIR_COLOR = new Scalar(78, 150, 200);
-	private static final Scalar[] BEST_PAIRS_COLOR = new Scalar[] {new Scalar(78, 150, 200), new Scalar(200, 120, 150), new Scalar(150, 23, 87)};
+	private static final Scalar[] BEST_PAIRS_COLOR = new Scalar[] { new Scalar(78, 150, 200), new Scalar(200, 120, 150),
+			new Scalar(150, 23, 87) };
+	private static final double FOCAL_LENGTH_PIXEL = 680;
 
 	private static final int MIN_HUE = 0;
 	private static final int MAX_HUE = 180;
-	private static final int MIN_SATURATION = 0;
-	private static final int MAX_SATURATION = 57;
-	private static final int MIN_VALUE = 220;
+	private static final int MIN_SATURATION = 200;
+	private static final int MAX_SATURATION = 255;
+	private static final int MIN_VALUE = 150;
 	private static final int MAX_VALUE = 255;
 	private static final double MIN_RIGHT_SCORE= 0.9;
 
@@ -61,6 +64,8 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	private int mTargetSelectNum;
 	private Boolean mSendTargetData;
 
+	private NetworkTableEntry angleEntry;
+
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians) {
 		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, DISTANCE_BETWEEN_CENTERS_CM);
@@ -73,6 +78,8 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 			double camFieldOfViewRadians, double realTargetLength) {
+		angleEntry = NetworkTableInstance.getDefault().getEntry("vision_angle");
+		angleEntry.setDefaultDouble(0);
 		mResultOutput = resultOutput;
 		mCvProcessing = cvProcessing;
 		mImageAnalyser = imageAnalyser;
@@ -96,33 +103,23 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 			List<RectPair> listRectPair = getPossiblePairs(rotatedRects); // ~1 ms
 			int amountRects = listRectPair.size();
 
-			double xOffSet = 0.0;
-			double distance = -1;
 			if (amountRects > 0) {
 				Collections.sort(listRectPair);
+
 				Mat pushImage = new Mat();
 
 				Imgproc.cvtColor(image, pushImage, Imgproc.COLOR_GRAY2RGB);
 
-				for (int i = 0; i < 1 && i < listRectPair.size(); i++) {
-					RectPair currPair = listRectPair.get(i);
-					if (currPair.score >= MIN_RIGHT_SCORE) {
-						char ch = (char) (i + 'A');
-						Imgproc.putText(pushImage, String.valueOf(ch), currPair.getCenter(), Core.FONT_HERSHEY_COMPLEX,
-								1, BEST_PAIRS_COLOR[i]);
-						System.out.println(String.format("score %f char %c ", currPair.score, ch));
-
-						drawRotatedRect(pushImage, currPair.rect1, BEST_PAIRS_COLOR[i]);
-						drawRotatedRect(pushImage, currPair.rect2, BEST_PAIRS_COLOR[i]);
-					}
-				}
-
-				if (mSendTargetData && mTargetSelectNum < listRectPair.size()) {
-					sendTargetData(image, listRectPair.get(mTargetSelectNum), imageWidth);
-				}
-
+				drawRotatedRect(pushImage, listRectPair.get(0).rect1, BEST_PAIR_COLOR);
+				drawRotatedRect(pushImage, listRectPair.get(0).rect2, BEST_PAIR_COLOR);
 				mResultOutput.putFrame(pushImage);
-			} else {
+				// sendTargetData(image, listRectPair.get(0), imageWidth);
+			// 	double distance = getDistanceCM(listRectPair.get(0), imageWidth);
+			// 	double xoffset = listRectPair.get(0).getCenter().x - imageWidth *0.5;
+				// 	System.out.println("Mine: " +getAngleDegrees(listRectPair.get(0),xoffset,distance)+" Klein's: "+getAngle(listRectPair.get(0), FOCAL_LENGTH_PIXEL, imageWidth)+ " \n	Others: "+(Math.toDegrees(mCamFieldOfViewRadians)/imageWidth)*xoffset + " \nDistance: "+distance);
+
+				angleEntry.setDouble(getAngle(listRectPair.get(0), FOCAL_LENGTH_PIXEL, imageWidth));
+		} else {
 				mResultOutput.putFrame(image);
 			}
 		} catch (Throwable e) {
@@ -195,14 +192,14 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 		Imgproc.line(image, p2, p3, color, 2);
 		Imgproc.line(image, p3, p4, color, 2);
 		Imgproc.line(image, p4, p1, color, 2);
-
 	}
+	
 	private void printRectsScores(RectPair bestPair) {
 		System.out.println(String.format("Angle score %f", bestPair.calcAngleScore()));
 		System.out.println(String.format("Height score %f", bestPair.calcHeightScore()));
 		System.out.println(String.format("Width score %f", bestPair.calcWidthScore()));
 		System.out.println(String.format("Ypos score %f", bestPair.calcYPosScore()));
-		System.out.println(String.format("centerhiehgt score %f removed", bestPair.calcCenterHeightScore()));
+		System.out.println(String.format("centerPoint center = rectPair.getCenter();hiehgt score %f removed", bestPair.calcCenterHeightScore()));
 		System.out.println(String.format("width height 1 %d %d", bestPair.rect1.boundingRect().width ,bestPair.rect1.boundingRect().height));
 		System.out.println(String.format("width height 1 %d %d", bestPair.rect2.boundingRect().width ,bestPair.rect2.boundingRect().height));
 		System.out.println(String.format("angle 1 %f", bestPair.rect1.angle));
@@ -221,10 +218,16 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	
 	private void sendTargetData(Mat image, RectPair rectPair, double imageWidth) {
 		System.out.println("Send ");
-		Point center = rectPair.getCenter();
 		double distance = getDistanceCM(rectPair, imageWidth);
-		double angleInDegress = getAngleDegrees(rectPair, center.x - imageWidth * 0.5, distance);
+		double angleInDegress = getAngle(rectPair, FOCAL_LENGTH_PIXEL, imageWidth);
 		mTargetDataTable.setTargetData(new TargetData(distance, angleInDegress));
 		mSendTargetData = false;
+	}
+
+	private double getAngle(RectPair rectPair, double focalLength, double imageWidth) {
+		Point center = rectPair.getCenter();
+		double xoffset = center.x - imageWidth * 0.5;
+
+		return Math.toDegrees(Math.atan(xoffset / focalLength));
 	}
 }

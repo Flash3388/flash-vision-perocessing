@@ -122,10 +122,10 @@ public final class Main {
         CameraConfig camConfigs = config.getCameraConfigs().get(0);
 
         VisionThread visionThread = new VisionThread(cameras.get(0),
-                //new ScoreMatchingPipeline(cvSource, cvProcessing, imageAnalyser, camConfigs.getCameraFieldOfViewRadians()),
-                new ColorFilteringPipeline(NetworkTableInstance.getDefault().getTable("colors"), cvSource, cvProcessing),
-                pipeline -> {
-                });
+                new ScoreMatchingPipeline(cvSource, cvProcessing, imageAnalyser, camConfigs.getCameraFieldOfViewRadians()),
+                 //new ColorFilteringPipeline(NetworkTableInstance.getDefault().getTable("colors"), cvSource, cvProcessing),
+                 pipeline -> {
+                 });
 
         visionThread.start();
     }
