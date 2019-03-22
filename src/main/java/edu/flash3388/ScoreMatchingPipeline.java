@@ -13,6 +13,7 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionPipeline;
 
+import frc.time.Clock;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -54,6 +55,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	private final CvProcessing mCvProcessing;
 	private final ImageAnalyser mImageAnalyser;
 	private final double mCamFieldOfViewRadians;
+	private final Clock mClock;
 
 	private Range hue;
 	private Range saturation;
@@ -65,10 +67,11 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	private Boolean mSendTargetData;
 
 	private NetworkTableEntry angleEntry;
+	private NetworkTableEntry timeEntry;
 
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
-			double camFieldOfViewRadians) {
-		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, DISTANCE_BETWEEN_CENTERS_CM);
+                                 double camFieldOfViewRadians, Clock clock) {
+		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, DISTANCE_BETWEEN_CENTERS_CM, clock);
 		mTargetDataTable = new TargetDataTable();
 		mTargetSelectTable = new TargetSelectTable();
 		mTargetSelectTable.registerSelectTargetListener(this);
@@ -77,14 +80,19 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	}
 
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
-			double camFieldOfViewRadians, double realTargetLength) {
-		angleEntry = NetworkTableInstance.getDefault().getEntry("vision_angle");
+                                 double camFieldOfViewRadians, double realTargetLength, Clock clock) {
+        angleEntry = NetworkTableInstance.getDefault().getEntry("vision_angle");
 		angleEntry.setDefaultDouble(0);
+
+        timeEntry = NetworkTableInstance.getDefault().getEntry("vision_time");
+        timeEntry.setDefaultDouble(0);
+
 		mResultOutput = resultOutput;
 		mCvProcessing = cvProcessing;
 		mImageAnalyser = imageAnalyser;
 		mCamFieldOfViewRadians = camFieldOfViewRadians;
 		mRealTargetLength = realTargetLength;
+        mClock = clock;
 
 		hue = new Range(MIN_HUE, MAX_HUE);
 		saturation = new Range(MIN_SATURATION, MAX_SATURATION);
@@ -119,6 +127,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 				// 	System.out.println("Mine: " +getAngleDegrees(listRectPair.get(0),xoffset,distance)+" Klein's: "+getAngle(listRectPair.get(0), FOCAL_LENGTH_PIXEL, imageWidth)+ " \n	Others: "+(Math.toDegrees(mCamFieldOfViewRadians)/imageWidth)*xoffset + " \nDistance: "+distance);
 
 				angleEntry.setDouble(getAngle(listRectPair.get(0), FOCAL_LENGTH_PIXEL, imageWidth));
+                timeEntry.setDouble(mClock.currentTimeMillis());
 		} else {
 				mResultOutput.putFrame(image);
 			}
