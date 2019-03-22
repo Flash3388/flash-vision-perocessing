@@ -24,6 +24,9 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionThread;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.time.JavaNanoClock;
+import frc.time.sync.NtpClient;
+import frc.time.sync.NtpClock;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -116,6 +119,26 @@ public final class Main {
     }
 
     private static void startVisionThread(List<VideoSource> cameras, Config config) {
+        NtpClock clock = new NtpClock(new JavaNanoClock());
+
+        NetworkTable ntpTable = NetworkTableInstance.getDefault().getTable("ntp");
+        NtpClient ntpClient = new NtpClient(
+                ntpTable.getEntry("client"),
+                ntpTable.getEntry("serverRec"),
+                ntpTable.getEntry("serverSend"),
+                clock);
+
+        new Thread(()-> {
+            while (!Thread.interrupted()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    break;
+                }
+                ntpClient.sync();
+            }
+        }).start();
+
         CvProcessing cvProcessing = new CvProcessing();
         ImageAnalyser imageAnalyser = new ImageAnalyser();
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
