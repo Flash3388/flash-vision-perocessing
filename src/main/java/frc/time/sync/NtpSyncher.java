@@ -3,6 +3,7 @@ package frc.time.sync;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.EntryNotification;
 import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 
 public class NtpSyncher {
 
@@ -45,7 +46,6 @@ public class NtpSyncher {
 
         long offset = ((mServerStartTimestamp - mClientStartTimestamp) + (mServerEndTimestamp - mClientEndTimestamp)) / 2;
 
-        System.out.println(String.format("%d -> %d | %d -> %d | %d", mServerStartTimestamp, mServerEndTimestamp, mClientStartTimestamp, mClientEndTimestamp, offset));
         mClock.updateOffset(offset);
     }
 }
