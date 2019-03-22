@@ -8,16 +8,18 @@ public class NtpClient {
     private final NetworkTableEntry mServerRecTimeEntry;
     private final NetworkTableEntry mServerSendTimeEntry;
     private final NtpClock mClock;
+    private final NtpSyncher mNtpSyncher;
 
     public NtpClient(NetworkTableEntry clientEntry, NetworkTableEntry serverRecTimeEntry, NetworkTableEntry serverSendTimeEntry, NtpClock clock) {
         mClientEntry = clientEntry;
         mServerRecTimeEntry = serverRecTimeEntry;
         mServerSendTimeEntry = serverSendTimeEntry;
         mClock = clock;
+
+        mNtpSyncher = new NtpSyncher(mClientEntry, mServerRecTimeEntry, mServerSendTimeEntry, mClock);
     }
 
     public void sync() {
-        NtpSyncher syncher = new NtpSyncher(mClientEntry, mServerRecTimeEntry, mServerSendTimeEntry, mClock);
-        syncher.startSync();
+        mNtpSyncher.startSync();
     }
 }

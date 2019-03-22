@@ -23,15 +23,15 @@ public class NtpSyncher {
         mClock = clock;
 
         mClientEntry.addListener(this::onClientRequest, EntryListenerFlags.kUpdate);
+    }
+
+    public void startSync() {
+        mClientEntry.setBoolean(true);
 
         mClientStartTimestamp = mClock.currentTimeMillis();
         mClientEndTimestamp = 0;
         mServerStartTimestamp = 0;
         mServerEndTimestamp = 0;
-    }
-
-    public void startSync() {
-        mClientEntry.setBoolean(true);
     }
 
     private void onClientRequest(EntryNotification notification) {
@@ -44,6 +44,8 @@ public class NtpSyncher {
         mServerEndTimestamp = (long) mServerSendTimeEntry.getDouble(-1);
 
         long offset = ((mServerStartTimestamp - mClientStartTimestamp) + (mServerEndTimestamp - mClientEndTimestamp)) / 2;
+
+        System.out.println(String.format("%d -> %d | %d -> %d | %d", mServerStartTimestamp, mServerEndTimestamp, mClientStartTimestamp, mClientEndTimestamp, offset));
         mClock.updateOffset(offset);
     }
 }

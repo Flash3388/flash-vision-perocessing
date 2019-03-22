@@ -30,5 +30,6 @@ public class NtpClock implements Clock {
 
     public void updateOffset(long offset) {
         mLastTime += offset;
+        mLastMeasureTime = mMeasureClock.currentTimeMillis();
     }
 }

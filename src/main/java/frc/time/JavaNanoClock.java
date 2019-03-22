@@ -4,6 +4,6 @@ public class JavaNanoClock implements Clock {
 
     @Override
     public long currentTimeMillis() {
-        return System.nanoTime();
+        return (long) (System.nanoTime() * 1e-6);
     }
 }
