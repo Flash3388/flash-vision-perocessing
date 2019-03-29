@@ -146,7 +146,7 @@ public final class Main {
         NetworkTable cameraControlTable = NetworkTableInstance.getDefault().getTable("cameraCtrl");
         NetworkTableEntry exposureEntry = cameraControlTable.getEntry("exposure");
 
-        camera.getProperty("exposure_auto").set(0);
+        camera.getProperty("exposure_auto").set(1);
         exposureEntry.setDouble(camera.getProperty("exposure_absolute").get());
 
         exposureEntry.addListener((notification) -> {
