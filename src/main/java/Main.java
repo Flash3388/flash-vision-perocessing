@@ -20,7 +20,9 @@ import edu.wpi.first.Config;
 import edu.wpi.first.ConfigLoader;
 import edu.wpi.first.NtMode;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionThread;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -138,6 +140,18 @@ public final class Main {
                 ntpClient.sync();
             }
         }).start();
+
+        VideoSource camera = cameras.get(0);
+
+        NetworkTable cameraControlTable = NetworkTableInstance.getDefault().getTable("cameraCtrl");
+        NetworkTableEntry exposureEntry = cameraControlTable.getEntry("exposure");
+
+        camera.getProperty("exposure_auto").set(0);
+        exposureEntry.setDouble(camera.getProperty("exposure_absolute").get());
+
+        exposureEntry.addListener((notification) -> {
+            camera.getProperty("exposure_absolute").set((int) notification.value.getDouble());
+        }, EntryListenerFlags.kUpdate);
 
         CvProcessing cvProcessing = new CvProcessing();
         ImageAnalyser imageAnalyser = new ImageAnalyser();
