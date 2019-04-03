@@ -68,6 +68,9 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 
 	private NetworkTableEntry angleEntry;
 	private NetworkTableEntry timeEntry;
+	private NetworkTableEntry distanceEntry;
+	private NetworkTableEntry waitEntry;
+	private NetworkTableEntry runEntry;
 
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
                                  double camFieldOfViewRadians, Clock clock) {
@@ -87,6 +90,15 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
         timeEntry = NetworkTableInstance.getDefault().getEntry("vision_time");
         timeEntry.setDefaultDouble(0);
 
+        distanceEntry = NetworkTableInstance.getDefault().getEntry("vision_distance");
+        distanceEntry.setDefaultDouble(0);
+
+        runEntry = NetworkTableInstance.getDefault().getEntry("vision_run");
+        runEntry.setDefaultBoolean(false);
+
+        waitEntry = NetworkTableInstance.getDefault().getEntry("vision_wait");
+        waitEntry.setDefaultBoolean(false);
+
 		mResultOutput = resultOutput;
 		mCvProcessing = cvProcessing;
 		mImageAnalyser = imageAnalyser;
@@ -102,6 +114,8 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 	@Override
 	public void process(Mat image) {
 		try {
+		    boolean isWaiting = runEntry.getBoolean(false);
+
 			double imageWidth = image.width();
 
 			mCvProcessing.rgbToHsv(image, image); // ~15 ms
@@ -126,8 +140,14 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 			// 	double xoffset = listRectPair.get(0).getCenter().x - imageWidth *0.5;
 				// 	System.out.println("Mine: " +getAngleDegrees(listRectPair.get(0),xoffset,distance)+" Klein's: "+getAngle(listRectPair.get(0), FOCAL_LENGTH_PIXEL, imageWidth)+ " \n	Others: "+(Math.toDegrees(mCamFieldOfViewRadians)/imageWidth)*xoffset + " \nDistance: "+distance);
 
+                distanceEntry.setDouble(getDistanceCM(listRectPair.get(0), imageWidth));
+
 				angleEntry.setDouble(getAngle(listRectPair.get(0), FOCAL_LENGTH_PIXEL, imageWidth));
                 timeEntry.setDouble(mClock.currentTimeMillis());
+
+                if (isWaiting) {
+                    waitEntry.setDouble(waitEntry.getDouble(0) + 1);
+                }
 		} else {
 				mResultOutput.putFrame(image);
 			}
