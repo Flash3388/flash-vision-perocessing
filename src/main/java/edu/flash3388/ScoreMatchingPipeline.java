@@ -97,7 +97,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
         runEntry.setDefaultBoolean(false);
 
         waitEntry = NetworkTableInstance.getDefault().getEntry("vision_wait");
-        waitEntry.setDefaultBoolean(false);
+        waitEntry.setDefaultDouble(0);
 
 		mResultOutput = resultOutput;
 		mCvProcessing = cvProcessing;
