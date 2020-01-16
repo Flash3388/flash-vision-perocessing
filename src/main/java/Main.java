@@ -20,10 +20,15 @@ import edu.wpi.first.Config;
 import edu.wpi.first.ConfigLoader;
 import edu.wpi.first.NtMode;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionThread;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.time.JavaNanoClock;
+import frc.time.sync.NtpClient;
+import frc.time.sync.NtpClock;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -116,16 +121,48 @@ public final class Main {
     }
 
     private static void startVisionThread(List<VideoSource> cameras, Config config) {
+        NtpClock clock = new NtpClock(new JavaNanoClock());
+
+        NetworkTable ntpTable = NetworkTableInstance.getDefault().getTable("ntp");
+        NtpClient ntpClient = new NtpClient(
+                ntpTable.getEntry("client"),
+                ntpTable.getEntry("serverRec"),
+                ntpTable.getEntry("serverSend"),
+                clock);
+
+        new Thread(()-> {
+            while (!Thread.interrupted()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    break;
+                }
+                ntpClient.sync();
+            }
+        }).start();
+
+        VideoSource camera = cameras.get(0);
+
+        NetworkTable cameraControlTable = NetworkTableInstance.getDefault().getTable("cameraCtrl");
+        NetworkTableEntry exposureEntry = cameraControlTable.getEntry("exposure");
+
+        camera.getProperty("exposure_auto").set(1);
+        exposureEntry.setDouble(camera.getProperty("exposure_absolute").get());
+
+        exposureEntry.addListener((notification) -> {
+            camera.getProperty("exposure_absolute").set((int) notification.value.getDouble());
+        }, EntryListenerFlags.kUpdate);
+
         CvProcessing cvProcessing = new CvProcessing();
         ImageAnalyser imageAnalyser = new ImageAnalyser();
         CvSource cvSource = CameraServer.getInstance().putVideo("processed", 480, 320);
         CameraConfig camConfigs = config.getCameraConfigs().get(0);
 
         VisionThread visionThread = new VisionThread(cameras.get(0),
-                //new ScoreMatchingPipeline(cvSource, cvProcessing, imageAnalyser, camConfigs.getCameraFieldOfViewRadians()),
-                new ColorFilteringPipeline(NetworkTableInstance.getDefault().getTable("colors"), cvSource, cvProcessing),
-                pipeline -> {
-                });
+                 new ScoreMatchingPipeline(cvSource, cvProcessing, imageAnalyser, camConfigs.getCameraFieldOfViewRadians(), clock),
+                 //new ColorFilteringPipeline(NetworkTableInstance.getDefault().getTable("colors"), cvSource, cvProcessing),
+                 pipeline -> {
+                 });
 
         visionThread.start();
     }
