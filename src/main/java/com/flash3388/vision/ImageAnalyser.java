@@ -1,6 +1,6 @@
-package edu.flash3388.vision;
+package com.flash3388.vision;
 
-import edu.flash3388.math.Vector3;
+import com.flash3388.math.Vector3;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;

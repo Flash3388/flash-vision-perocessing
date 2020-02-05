@@ -1,4 +1,4 @@
-package edu.flash3388.math;
+package com.flash3388.math;
 
 import java.util.Objects;
 

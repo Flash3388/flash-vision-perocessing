@@ -1,4 +1,4 @@
-package edu.flash3388.vision.template;
+package com.flash3388.vision.template;
 
 import org.opencv.core.Point;
 

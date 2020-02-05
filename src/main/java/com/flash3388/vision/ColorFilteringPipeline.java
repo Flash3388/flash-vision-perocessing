@@ -1,6 +1,6 @@
-package edu.flash3388.vision;
+package com.flash3388.vision;
 
-import edu.flash3388.vision.cv.CvProcessing;
+import com.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.vision.VisionPipeline;

@@ -1,4 +1,4 @@
-package edu.flash3388.vision.template;
+package com.flash3388.vision.template;
 
 public class TemplateMatchingException extends Exception {
 

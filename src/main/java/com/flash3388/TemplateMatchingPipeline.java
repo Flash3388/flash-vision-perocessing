@@ -1,10 +1,10 @@
-package edu.flash3388;
+package com.flash3388;
 
-import edu.flash3388.vision.ImageAnalyser;
-import edu.flash3388.vision.cv.CvProcessing;
-import edu.flash3388.vision.template.TemplateMatcher;
-import edu.flash3388.vision.template.TemplateMatchingException;
-import edu.flash3388.vision.template.TemplateMatchingResult;
+import com.flash3388.vision.ImageAnalyser;
+import com.flash3388.vision.cv.CvProcessing;
+import com.flash3388.vision.template.TemplateMatcher;
+import com.flash3388.vision.template.TemplateMatchingException;
+import com.flash3388.vision.template.TemplateMatchingResult;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;
 import org.opencv.core.Mat;

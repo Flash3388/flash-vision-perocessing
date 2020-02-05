@@ -1,4 +1,4 @@
-package edu.flash3388;
+package com.flash3388;
 
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;

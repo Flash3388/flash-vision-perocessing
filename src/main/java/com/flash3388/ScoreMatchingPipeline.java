@@ -1,12 +1,12 @@
-package edu.flash3388;
+package com.flash3388;
 
 import frc.tables.TargetData;
 import frc.tables.TargetDataTable;
 import frc.tables.TargetSelectTable;
 import frc.tables.TargetSelectListener;
 
-import edu.flash3388.vision.ImageAnalyser;
-import edu.flash3388.vision.cv.CvProcessing;
+import com.flash3388.vision.ImageAnalyser;
+import com.flash3388.vision.cv.CvProcessing;
 
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.networktables.NetworkTableEntry;

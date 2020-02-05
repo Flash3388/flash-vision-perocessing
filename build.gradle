@@ -28,7 +28,7 @@ dependencies {
 }
 
 application {
-    mainClassName = 'Main'
+    mainClassName = 'main.Main'
     applicationName = 'frcvision'
 }
 

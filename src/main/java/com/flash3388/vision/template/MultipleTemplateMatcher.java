@@ -1,6 +1,6 @@
-package edu.flash3388.vision.template;
+package com.flash3388.vision.template;
 
-import edu.flash3388.vision.cv.CvProcessing;
+import com.flash3388.vision.cv.CvProcessing;
 import org.opencv.core.Mat;
 
 import java.util.ArrayList;

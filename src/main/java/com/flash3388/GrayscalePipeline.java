@@ -1,4 +1,4 @@
-package edu.flash3388;
+package com.flash3388;
 
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.vision.VisionPipeline;

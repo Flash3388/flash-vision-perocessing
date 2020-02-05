@@ -1,6 +1,6 @@
 package edu.wpi.first;
 
-import edu.flash3388.vision.template.TemplateMatchingMethod;
+import com.flash3388.vision.template.TemplateMatchingMethod;
 
 import java.io.File;
 import java.util.Collections;
