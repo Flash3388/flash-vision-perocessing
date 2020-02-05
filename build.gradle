@@ -1,32 +1,37 @@
 plugins {
-    id 'java'
     id 'application'
-    id 'com.github.johnrengelman.shadow' version '4.0.3' apply false
 }
-
-mainClassName = 'Main'
-
-apply plugin: 'com.github.johnrengelman.shadow'
 
 repositories {
     mavenCentral()
 
     maven {
-        url('http://first.wpi.edu/FRC/roborio/maven/release')
+        url('https://frcmaven.wpi.edu/artifactory/release')
     }
 }
 
 dependencies {
-    compile 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.google.code.gson:gson:2.8.5'
 
-    compile 'edu.wpi.first.wpilibj:wpilibj-java:2019.1.1'
-    compile 'edu.wpi.first.wpiutil:wpiutil-java:2019.2.1'
-    compile 'edu.wpi.first.cscore:cscore-java:2019.2.1'
-    compile 'edu.wpi.first.ntcore:ntcore-java:2019.2.1'
-    compile 'edu.wpi.first.cameraserver:cameraserver-java:2019.2.1'
-    compile 'edu.wpi.first.thirdparty.frc2019.opencv:opencv-java:3.4.4-4'
+    implementation 'edu.wpi.first.wpilibj:wpilibj-java:2020.2.1'
+    implementation 'edu.wpi.first.wpiutil:wpiutil-java:2020.2.1'
+
+    implementation 'edu.wpi.first.cscore:cscore-java:2020.2.1'
+    implementation 'edu.wpi.first.ntcore:ntcore-java:2020.2.1'
+
+    implementation 'edu.wpi.first.cameraserver:cameraserver-java:2020.2.1'
+
+    implementation fileTree(include: ['*.jar'], dir: project.file('libs'))
+
+    //nativeJni 'edu.wpi.first.cscore:cscore-jni:2020.2.1'
+    //nativeJni 'edu.wpi.first.ntcore:ntcore-jni:2020.2.1@'
 }
 
-wrapper {
-    gradleVersion = '5.0'
+application {
+    mainClassName = 'Main'
+    applicationName = 'frcvision'
+}
+
+run {
+    args project.file('frc.json').absolutePath
 }
