@@ -81,9 +81,10 @@ public final class Main {
             List<VideoSource> cameras = startCameras(config);
             if (cameras.size() >= 1) {
                 startVisionThread(cameras, config);
+                waitForever();
+            } else {
+                System.out.println("No cameras");
             }
-
-            waitForever();
         } catch (Throwable e) {
             e.printStackTrace();
         }
