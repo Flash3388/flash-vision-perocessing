@@ -14,7 +14,7 @@
     "team": 3388,
     "templateMatchingMethod": "SQDIFF_NORMED",
     "visionTemplatePath": "/home/pi/templates/",
-    "templateMatchingScaleFactor": 2.0
+    "templateMatchingScaleFactor": 2.0,
     "vision": {
         "hue": {
             "min": 0,
