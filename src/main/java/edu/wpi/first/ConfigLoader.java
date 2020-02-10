@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.flash3388.vision.template.TemplateMatchingMethod;
+import org.opencv.core.Range;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,8 +49,9 @@ public class ConfigLoader {
         TemplateMatchingMethod templateMatchingMethod = parseTemplateMatchingMethod(rootObject);
         File visionTemplate = parseVisionTemplate(rootObject);
         double templateMatchingScaleFactor = parseTemplateMatchingScaleFactor(rootObject);
+        VisionConfig visionConfig = parseVisionConfig(rootObject);
 
-        return new Config(teamNumber, ntMode, cameraConfigs, templateMatchingMethod, visionTemplate, templateMatchingScaleFactor);
+        return new Config(teamNumber, ntMode, cameraConfigs, templateMatchingMethod, visionTemplate, templateMatchingScaleFactor, visionConfig);
     }
 
     private int parseTeamNumber(JsonObject rootObject) throws ConfigLoadException {
@@ -167,6 +169,39 @@ public class ConfigLoader {
             return rootObject.get("templateMatchingScaleFactor").getAsDouble();
         } catch (ClassCastException e) {
             throw new ConfigLoadException("`templateMatchingScaleFactor` element is not a double");
+        }
+    }
+
+    private VisionConfig parseVisionConfig(JsonObject rootObject) throws ConfigLoadException {
+        if (!rootObject.has("vision")) {
+            throw new ConfigLoadException("missing 'vision'");
+        }
+
+        JsonObject visionRoot = rootObject.getAsJsonObject("vision");
+        Range hue = parseRange(visionRoot, "hue");
+        Range saturation = parseRange(visionRoot, "saturation");
+        Range value = parseRange(visionRoot, "value");
+
+        return new VisionConfig(hue, saturation, value);
+    }
+
+    private Range parseRange(JsonObject rootObject, String memberName) throws ConfigLoadException {
+        try {
+            if (!rootObject.has(memberName)) {
+                throw new ConfigLoadException("Missing " + memberName);
+            }
+
+            JsonObject range = rootObject.getAsJsonObject(memberName);
+            if (!range.has("min") || !range.has("max")) {
+                throw new ConfigLoadException("Range missing min/max: "+ memberName);
+            }
+
+            return new Range(
+                    range.get("min").getAsInt(),
+                    range.get("max").getAsInt()
+            );
+        } catch (ClassCastException e) {
+            throw new ConfigLoadException("Range type error, should be object with min/max integers: "+memberName);
         }
     }
 }

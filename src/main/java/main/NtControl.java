@@ -1,8 +1,10 @@
 package main;
 
+import com.flash3388.vision.ColorSettings;
 import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.Config;
 import edu.wpi.first.NtMode;
+import edu.wpi.first.VisionConfig;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -65,5 +67,13 @@ public class NtControl {
         }).start();
 
         return clock;
+    }
+
+    public ColorSettings colorSettings() {
+        VisionConfig visionConfig = mConfig.getVisionConfig();
+        return ColorSettings.fromTable(
+                mNtInstance.getTable("colorSettings"),
+                visionConfig.getHue(), visionConfig.getSaturation(), visionConfig.getValue()
+        );
     }
 }

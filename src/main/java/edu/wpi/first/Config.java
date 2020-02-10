@@ -14,14 +14,16 @@ public class Config {
     private final TemplateMatchingMethod mTemplateMatchingMethod;
     private final File mVisionTemplate;
     private final double mTemplateMatchingScaleFactor;
+    private final VisionConfig mVisionConfig;
 
-    public Config(int team, NtMode ntMode, List<CameraConfig> cameraConfigs, TemplateMatchingMethod templateMatchingMethod, File visionTemplate, double templateMatchingScaleFactor) {
+    public Config(int team, NtMode ntMode, List<CameraConfig> cameraConfigs, TemplateMatchingMethod templateMatchingMethod, File visionTemplate, double templateMatchingScaleFactor, VisionConfig visionConfig) {
         mTeam = team;
         mNtMode = ntMode;
         mCameraConfigs = Collections.unmodifiableList(cameraConfigs);
         mTemplateMatchingMethod = templateMatchingMethod;
         mVisionTemplate = visionTemplate;
         mTemplateMatchingScaleFactor = templateMatchingScaleFactor;
+        mVisionConfig = visionConfig;
     }
 
     public int getTeamNumber() {
@@ -46,5 +48,9 @@ public class Config {
 
     public double getTemplateMatchingScaleFactor() {
         return mTemplateMatchingScaleFactor;
+    }
+
+    public VisionConfig getVisionConfig() {
+        return mVisionConfig;
     }
 }

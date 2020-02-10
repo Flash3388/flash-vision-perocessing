@@ -1,5 +1,6 @@
 package main;
 
+import com.flash3388.vision.ColorSettings;
 import com.flash3388.vision.ImageAnalyser;
 import com.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
@@ -43,9 +44,11 @@ public class FrcVision {
         CvSource cvSource = CameraServer.getInstance()
                 .putVideo("processed", 480, 320);
 
+        ColorSettings colorSettings = mNtControl.colorSettings();
+
         new VisionControl(clock,
                 new CvProcessing(), new ImageAnalyser(),
-                cvSource)
+                cvSource, colorSettings)
                 .startForCamera(camera, config.getCameraConfigs().get(0));
     }
 
