@@ -121,6 +121,7 @@ public class ScoreMatchingPipeline implements VisionPipeline, TargetSelectListen
 			mCvProcessing.rgbToHsv(image, image); // ~15 ms
 			mCvProcessing.filterMatColors(image, image, hue, saturation, value); // ~15 ms
 			List<MatOfPoint> countours = mCvProcessing.detectContours(image); // ~10 ms
+//			Imgproc.approxPolyDP();
 			List<RotatedRect> rotatedRects = getRotatedRects(countours); // ~3 ms
 			List<RectPair> listRectPair = getPossiblePairs(rotatedRects); // ~1 ms
 			int amountRects = listRectPair.size();

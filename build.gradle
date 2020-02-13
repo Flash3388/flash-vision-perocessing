@@ -25,6 +25,10 @@ dependencies {
 
     implementation group: 'edu.wpi.first.cscore', name: 'cscore-jni', version: '2020.2.1', classifier: 'linuxx86-64debug'
     implementation group: 'edu.wpi.first.ntcore', name: 'ntcore-jni', version: '2020.2.1', classifier: 'linuxx86-64debug'
+
+    implementation "edu.wpi.first.ntcore:ntcore-java:2020.2.1"
+    implementation "edu.wpi.first.ntcore:ntcore-jni:2020.2.1"
+    implementation "edu.wpi.first.ntcore:ntcore-jni:2020.2.1:linuxx86-64"
 }
 
 application {
