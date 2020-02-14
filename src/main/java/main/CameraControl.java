@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CameraControl {
-
     private final Config mConfig;
 
     public CameraControl(Config config) {

@@ -7,12 +7,10 @@ import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.Config;
 import edu.wpi.first.cameraserver.CameraServer;
-import frc.time.Clock;
 
 import java.util.List;
 
 public class FrcVision {
-
     private final Config mConfig;
     private final CameraControl mCameraControl;
     private final NtControl mNtControl;
@@ -36,8 +34,6 @@ public class FrcVision {
     }
 
     private void startVisionThread(List<VideoSource> cameras, Config config) {
-        Clock clock = mNtControl.initializeNtp();
-
         VideoSource camera = cameras.get(0);
         mNtControl.initializeExposureControl(camera);
 
@@ -46,7 +42,7 @@ public class FrcVision {
 
         ColorSettings colorSettings = mNtControl.colorSettings();
 
-        new VisionControl(clock,
+        new VisionControl(
                 new CvProcessing(), new ImageAnalyser(),
                 cvSource, colorSettings)
                 .startForCamera(camera, config.getCameraConfigs().get(0));

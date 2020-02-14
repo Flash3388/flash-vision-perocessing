@@ -9,9 +9,6 @@ import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import frc.time.JavaNanoClock;
-import frc.time.sync.NtpClient;
-import frc.time.sync.NtpClock;
 
 public class NtControl {
 
@@ -43,30 +40,6 @@ public class NtControl {
         exposureEntry.addListener((notification) -> {
             camera.getProperty("exposure_absolute").set((int) notification.value.getDouble());
         }, EntryListenerFlags.kUpdate);
-    }
-
-    public NtpClock initializeNtp() {
-        NtpClock clock = new NtpClock(new JavaNanoClock());
-
-        NetworkTable ntpTable = mNtInstance.getTable("ntp");
-        NtpClient ntpClient = new NtpClient(
-                ntpTable.getEntry("client"),
-                ntpTable.getEntry("serverRec"),
-                ntpTable.getEntry("serverSend"),
-                clock);
-
-        new Thread(()-> {
-            while (!Thread.interrupted()) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    break;
-                }
-                ntpClient.sync();
-            }
-        }).start();
-
-        return clock;
     }
 
     public ColorSettings colorSettings() {
