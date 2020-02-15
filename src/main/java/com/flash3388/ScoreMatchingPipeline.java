@@ -86,9 +86,10 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 			if(optionalTarget.isPresent()) {
 				Target target = optionalTarget.get();
-
-				distanceCm = calcDistanceCM(target.width(), imageWidth);
-				angleOffsetDegrees = calcAngleOffsetDegrees(target.centerX(), FOCAL_LENGTH_PIXEL, imageWidth);
+				if(target.calcScore() > MIN_SCORE) {
+					distanceCm = calcDistanceCM(target.width(), imageWidth);
+					angleOffsetDegrees = calcAngleOffsetDegrees(target.centerX(), FOCAL_LENGTH_PIXEL, imageWidth);
+				}
 			}
 
 			distanceEntry.setDouble(distanceCm);
