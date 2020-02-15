@@ -3,6 +3,7 @@ package com.flash3388;
 import com.flash3388.vision.ImageAnalyser;
 import com.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionPipeline;
@@ -51,10 +52,11 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
 								 double camFieldOfViewRadians, double targetHeightToWidthRatio, double targetRealWidth) {
-		angleEntry = NetworkTableInstance.getDefault().getEntry("vision_angle");
+		NetworkTable visionTable = NetworkTableInstance.getDefault().getTable("vision");
+		angleEntry = visionTable.getEntry("angle_degrees");
 		angleEntry.setDefaultDouble(0);
 
-        distanceEntry = NetworkTableInstance.getDefault().getEntry("vision_distance");
+        distanceEntry = visionTable.getEntry("distance_cm");
         distanceEntry.setDefaultDouble(0);
 
 		this.resultOutput = resultOutput;
