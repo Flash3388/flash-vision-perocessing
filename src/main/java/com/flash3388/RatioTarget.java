@@ -1,6 +1,9 @@
 package com.flash3388;
 
+import org.opencv.core.Mat;
 import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 public class RatioTarget implements Target {
     private final double expectedHeightToWidthRation;
@@ -26,6 +29,11 @@ public class RatioTarget implements Target {
         double actualRatio = rectHeightToWidthRatio();
 
         return actualRatio > expectedHeightToWidthRation ? expectedHeightToWidthRation/actualRatio : actualRatio/expectedHeightToWidthRation;
+    }
+
+    @Override
+    public void draw(Mat img) {
+        Imgproc.rectangle(img, rect.tl(), rect.br(), new Scalar(78, 150, 200));
     }
 
     private double rectHeightToWidthRatio() {

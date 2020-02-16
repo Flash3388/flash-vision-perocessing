@@ -1,5 +1,6 @@
 package com.flash3388;
 
+import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.imgproc.Imgproc;
@@ -24,6 +25,11 @@ public class SlicedHexagonTarget implements Target {
     @Override
     public double calcScore() {
         return 0;
+    }
+
+    @Override
+    public void draw(Mat img) {
+
     }
 
     private MatOfPoint shape(MatOfPoint countour) {

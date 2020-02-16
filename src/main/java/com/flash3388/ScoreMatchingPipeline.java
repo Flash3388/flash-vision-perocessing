@@ -79,16 +79,17 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 			cvProcessing.filterMatColors(image, image, hue, saturation, value);
 			Optional<RatioTarget> optionalTarget = retrieveBestTarget(cvProcessing.detectContours(image));
 
-			Mat pushImage = new Mat();
-			Core.subtract(image.clone(), image.clone(), pushImage);
-			Imgproc.cvtColor(pushImage, pushImage, Imgproc.COLOR_GRAY2RGB);
-
 			double distanceCm = -1;
 			double angleOffsetDegrees = 0;
 
 			if(optionalTarget.isPresent()) {
 				Target target = optionalTarget.get();
 				if(target.calcScore() > MIN_SCORE) {
+					Mat pushImage = new Mat();
+					Imgproc.cvtColor(image, pushImage, Imgproc.COLOR_GRAY2RGB);
+					target.draw(pushImage);
+					resultOutput.putFrame(pushImage);
+
 					distanceCm = calcDistanceCM(target.width(), imageWidth);
 					angleOffsetDegrees = calcAngleOffsetDegrees(target.centerX(), FOCAL_LENGTH_PIXEL, imageWidth);
 				}
@@ -96,7 +97,6 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 			distanceEntry.setDouble(distanceCm);
 			angleEntry.setDouble(angleOffsetDegrees);
-			resultOutput.putFrame(pushImage);
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
