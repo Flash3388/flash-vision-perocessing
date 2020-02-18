@@ -1,5 +1,6 @@
 package com.flash3388;
 
+import com.flash3388.vision.ColorSettings;
 import com.flash3388.vision.ImageAnalyser;
 import com.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
@@ -45,13 +46,16 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private NetworkTableEntry angleEntry;
 	private NetworkTableEntry distanceEntry;
 
+	private final ColorSettings colorSettings;
+
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
-                                 double camFieldOfViewRadians) {
-		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, TARGET_WIDTH_TO_HEIGHT_RATIO, REAL_TARGET_WIDTH_CM);
+								 double camFieldOfViewRadians, ColorSettings colorSettings) {
+		this(resultOutput, cvProcessing, imageAnalyser, camFieldOfViewRadians, TARGET_WIDTH_TO_HEIGHT_RATIO, REAL_TARGET_WIDTH_CM, colorSettings);
 	}
 
 	public ScoreMatchingPipeline(CvSource resultOutput, CvProcessing cvProcessing, ImageAnalyser imageAnalyser,
-								 double camFieldOfViewRadians, double targetHeightToWidthRatio, double targetRealWidth) {
+								 double camFieldOfViewRadians, double targetHeightToWidthRatio, double targetRealWidth, ColorSettings colorSettings) {
+		this.colorSettings = colorSettings;
 		NetworkTable visionTable = NetworkTableInstance.getDefault().getTable("vision");
 		angleEntry = visionTable.getEntry("angle_degrees");
 		angleEntry.setDefaultDouble(0);
@@ -73,6 +77,10 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 	@Override
 	public void process(Mat image) {
+		hue = colorSettings.hue();
+		saturation = colorSettings.saturation();
+		value = colorSettings.value();
+
 		try {
 			double imageWidth = image.width();
 			cvProcessing.rgbToHsv(image, image);

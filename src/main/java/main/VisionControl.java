@@ -28,7 +28,7 @@ public class VisionControl {
         VisionThread visionThread = new VisionThread(camera,
                 new ScoreMatchingPipeline(mProcessedOutput,
                         mCvProcessing, mImageAnalyser,
-                        cameraConfig.getCameraFieldOfViewRadians()),
+                        cameraConfig.getCameraFieldOfViewRadians(), colorSettings),
                 pipeline -> {
                 });
 
