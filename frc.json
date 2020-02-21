@@ -8,6 +8,15 @@
             "pixel format": "mjpeg",
             "width": 320,
             "fov": 0.43388
+        },
+        {
+          "fps": 30,
+          "height": 480,
+          "name": "rPi Camera 1",
+          "path": "/dev/video1",
+          "pixel format": "mjpeg",
+          "width": 320,
+          "fov": 0.43388
         }
     ],
     "ntmode": "client",
