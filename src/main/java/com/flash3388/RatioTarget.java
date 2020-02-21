@@ -33,7 +33,7 @@ public class RatioTarget implements Target {
 
     @Override
     public void draw(Mat img) {
-        Imgproc.rectangle(img, rect.tl(), rect.br(), new Scalar(78, 150, 200));
+        Imgproc.rectangle(img, rect.tl(), rect.br(), new Scalar(78, 150, 200), 2);
     }
 
     private double rectHeightToWidthRatio() {
