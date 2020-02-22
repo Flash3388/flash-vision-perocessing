@@ -20,15 +20,15 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private static final double TARGET_HEIGHT_TO_WIDTH_RATIO = 42/92.0;
 	private static final double REAL_TARGET_WIDTH_CM = 92;
 
-	private static final double MIN_CONTOUR_SIZE = 2300;
+	private static final double MIN_CONTOUR_SIZE = 1000;
 	private static final double FOCAL_LENGTH_PIXEL = 680;
 	private static final double MIN_SCORE = 0.8;
 
 	private static final int MIN_HUE = 0;
 	private static final int MAX_HUE = 180;
-	private static final int MIN_SATURATION = 200;
+	private static final int MIN_SATURATION = 0;
 	private static final int MAX_SATURATION = 255;
-	private static final int MIN_VALUE = 80;
+	private static final int MIN_VALUE = 40;
 	private static final int MAX_VALUE = 255;
 
 	private final CvSource resultOutput;
@@ -76,9 +76,9 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 	@Override
 	public void process(Mat image) {
-//		hue = colorSettings.hue();
-//		saturation = colorSettings.saturation();
-//		value = colorSettings.value();
+		hue = colorSettings.hue();
+		saturation = colorSettings.saturation();
+		value = colorSettings.value();
 
 		try {
 			double imageWidth = image.width();
@@ -111,7 +111,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 	private Optional<RatioTarget> retrieveBestTarget(List<MatOfPoint> contours) {
 		return rectifyContours(contours).stream()
-				.filter(rect -> rect.area() > MIN_CONTOUR_SIZE && rect.br().y > 50)
+				.filter(rect -> rect.area() > MIN_CONTOUR_SIZE && rect.br().y > 30)
 				.map(rect -> new RatioTarget(rect, targetHeightToWidthRatio))
 				.max(Comparator.comparingDouble(RatioTarget::calcScore));
 	}
