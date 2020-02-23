@@ -76,9 +76,9 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 
 	@Override
 	public void process(Mat image) {
-//		hue = colorSettings.hue();
-//		saturation = colorSettings.saturation();
-//		value = colorSettings.value();
+		hue = colorSettings.hue();
+		saturation = colorSettings.saturation();
+		value = colorSettings.value();
 
 		try {
 			double imageWidth = image.width();

@@ -3,8 +3,17 @@
         {
             "fps": 30,
             "height": 480,
-            "name": "jetson processing",
+            "name": "processing",
             "path": "/dev/video0",
+            "pixel format": "mjpeg",
+            "width": 320,
+            "fov": 1
+        },
+        {
+            "fps": 30,
+            "height": 480,
+            "name": "viewing",
+            "path": "/dev/video1",
             "pixel format": "mjpeg",
             "width": 320,
             "fov": 1
