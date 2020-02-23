@@ -2,6 +2,7 @@ package main;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.CameraConfig;
 import edu.wpi.first.Config;
@@ -29,7 +30,7 @@ public class CameraControl {
     private VideoSource startCamera(CameraConfig config) {
         System.out.println(String.format("Starting camera %s on %s", config.getName(), config.getPath()));
 
-        VideoSource camera = CameraServer.getInstance().startAutomaticCapture(config.getName(), config.getPath());
+        VideoSource camera = new UsbCamera(config.getName(), config.getPath());
 
         Gson gson = new GsonBuilder().create();
         camera.setConfigJson(gson.toJson(config.getJsonData()));

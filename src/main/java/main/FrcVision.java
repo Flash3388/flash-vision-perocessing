@@ -4,6 +4,8 @@ import com.flash3388.vision.ColorSettings;
 import com.flash3388.vision.ImageAnalyser;
 import com.flash3388.vision.cv.CvProcessing;
 import edu.wpi.cscore.CvSource;
+import edu.wpi.cscore.MjpegServer;
+import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.Config;
 import edu.wpi.first.cameraserver.CameraServer;
