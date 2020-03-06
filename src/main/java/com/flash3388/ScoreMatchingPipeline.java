@@ -68,7 +68,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 		this.resultOutput = resultOutput;
 		this.cvProcessing = cvProcessing;
 		this.imageAnalyser = imageAnalyser;
-		this.camFieldOfViewRadians = camFieldOfViewRadians;
+		this.camFieldOfViewRadians = 1.229061;
 		this.targetHeightToWidthRatio = targetHeightToWidthRatio;
 		this.targetRealWidth = targetRealWidth;
 
