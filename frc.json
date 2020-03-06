@@ -7,16 +7,16 @@
             "path": "/dev/video0",
             "pixel format": "mjpeg",
             "width": 320,
-            "fov": 1
+            "fov": 0.43388
         },
         {
             "fps": 30,
-            "height": 480,
+            "height": 240,
             "name": "viewing",
             "path": "/dev/video1",
             "pixel format": "mjpeg",
-            "width": 320,
-            "fov": 1
+            "width": 160,
+            "fov": 0.43388
         }
     ],
     "ntmode": "client",

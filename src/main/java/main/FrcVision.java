@@ -25,8 +25,9 @@ public class FrcVision {
 
     public void startVision() {
         mNtControl.startNetworkTables();
-
         List<VideoSource> cameras = mCameraControl.startCameras();
+        mNtControl.initializeCameraSwitching(cameras);
+
         if (cameras.size() >= 1) {
             startVisionThread(cameras, mConfig);
             waitForever();

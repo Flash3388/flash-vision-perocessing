@@ -46,7 +46,6 @@ public class NtControl {
                 cameraServer.setSource(cameras.get((int)notification.value.getDouble()));
             } catch (IndexOutOfBoundsException ignored) {}
         }, EntryListenerFlags.kUpdate);
-
     }
 
     public void initializeExposureControl(VideoSource camera) {
