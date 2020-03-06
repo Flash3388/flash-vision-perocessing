@@ -7,7 +7,7 @@
             "path": "/dev/video0",
             "pixel format": "mjpeg",
             "width": 320,
-            "fov": 0.43388
+            "fov": 1.229061
         },
         {
             "fps": 30,

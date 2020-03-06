@@ -21,7 +21,6 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 	private static final double REAL_TARGET_WIDTH_CM = 92;
 
 	private static final double MIN_CONTOUR_SIZE = 1000;
-	private static final double FOCAL_LENGTH_PIXEL = 680;
 	private static final double MIN_SCORE = 0.6;
 
 	private static final int MIN_HUE = 0;
@@ -103,7 +102,7 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 					resultOutput.putFrame(pushImage);
 
 					distanceCm = calcDistanceCM(target.width(), imageWidth);
-					angleOffsetDegrees = calcAngleOffsetDegrees(target.centerX(), FOCAL_LENGTH_PIXEL, imageWidth);
+					angleOffsetDegrees = calcAngleOffsetDegrees(target.centerX(), imageWidth);
 				}
 			}
 
@@ -132,8 +131,9 @@ public class ScoreMatchingPipeline implements VisionPipeline {
 				targetRealWidth, camFieldOfViewRadians);
 	}
 
-	private double calcAngleOffsetDegrees(double centerX, double focalLength, double imageWidth) {
+	private double calcAngleOffsetDegrees(double centerX, double imageWidth) {
 		double xOffset = centerX - imageWidth * 0.5;
-		return Math.toDegrees(Math.atan(xOffset / focalLength));
+		double focalLengthPixel = imageWidth * 0.5 / Math.tan(Math.toDegrees(camFieldOfViewRadians) * 0.5 * Math.PI/180);
+		return Math.toDegrees(Math.atan(xOffset / focalLengthPixel));
 	}
 }
